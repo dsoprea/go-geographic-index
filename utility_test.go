@@ -22,9 +22,11 @@ FilesRead:
 
 	for {
 		select {
-		case err := <-errC:
-			close(filesC)
-			close(errC)
+		case err, ok := <-errC:
+			if ok == true {
+				close(filesC)
+				close(errC)
+			}
 
 			log.PanicIf(err)
 
@@ -33,8 +35,6 @@ FilesRead:
 
 			// TODO(dustin): !! Can vf have a useful value when (ok == false)?
 			if ok == false {
-				close(errC)
-
 				// The goroutine finished.
 				break FilesRead
 			}
@@ -87,17 +87,18 @@ FilesRead:
 
 	for {
 		select {
-		case err := <-errC:
-			close(filesC)
-			close(errC)
+		case err, ok := <-errC:
+			if ok == true {
+				// TODO(dustin): Can we close these on the other side after sending and still get our data?
+				close(filesC)
+				close(errC)
+			}
 
 			log.PanicIf(err)
 
 		case vf, ok := <-filesC:
 			// We have finished reading. `vf` has an empty value.
 			if ok == false {
-				close(errC)
-
 				// The goroutine finished.
 				break FilesRead
 			}

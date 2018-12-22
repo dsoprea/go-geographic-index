@@ -8,7 +8,7 @@ import (
 	"github.com/dsoprea/go-logging"
 )
 
-type FileListFilterPredicate func(parent string, child os.FileInfo) (bool, error)
+type FileListFilterPredicate func(parent string, child os.FileInfo) (hit bool, err error)
 
 type VisitedFile struct {
 	Filepath string
@@ -20,6 +20,12 @@ type VisitedFile struct {
 // `filesC` channel is closed. If there's an error, the `errC` channel will
 // receive it.
 func ListFiles(rootPath string, cb FileListFilterPredicate) (filesC chan VisitedFile, errC chan error) {
+	defer func() {
+		if state := recover(); state != nil {
+			err := log.Wrap(state.(error))
+			log.Panic(err)
+		}
+	}()
 
 	// Make sure the path exists.
 
@@ -105,6 +111,7 @@ func ListFiles(rootPath string, cb FileListFilterPredicate) (filesC chan Visited
 		}
 
 		close(filesC)
+		close(errC)
 	}()
 
 	return filesC, errC
