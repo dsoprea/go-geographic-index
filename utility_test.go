@@ -9,10 +9,6 @@ import (
 	"github.com/dsoprea/go-logging"
 )
 
-var (
-	appPath string
-)
-
 func TestListFiles_NoPredicate(t *testing.T) {
 	filesC, errC := ListFiles(appPath, nil)
 
@@ -112,9 +108,4 @@ FilesRead:
 	} else if visited[0].Filepath != gitPath || visited[1].Filepath != gitObjectsPath {
 		t.Fatalf("We did not visit the paths we expected: %v", visited)
 	}
-}
-
-func init() {
-	goPath := os.Getenv("GOPATH")
-	appPath = path.Join(goPath, "src", "github.com", "dsoprea", "go-geographic-index")
 }
