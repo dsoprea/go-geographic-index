@@ -1,12 +1,58 @@
 package geoindex
 
 import (
+	"io/ioutil"
+
+	"github.com/dsoprea/go-exif"
+	"github.com/dsoprea/go-jpeg-image-structure"
 	"github.com/dsoprea/go-logging"
 )
 
-func JpegImageFileProcessor(index *Index, filepath string) (err error) {
+var (
+	imageLogger = log.NewLogger("geoindex.image")
+)
 
-	// TODO(dustin): !! Finish implementation.
+func JpegImageFileProcessor(index *Index, filepath string) (err error) {
+	jmp := jpegstructure.NewJpegMediaParser()
+
+	data, err := ioutil.ReadFile(filepath)
+	log.PanicIf(err)
+
+	sl, err := jmp.ParseBytes(data)
+	log.PanicIf(err)
+
+	rootIfd, _, err := sl.Exif()
+	if err != nil {
+		// Skip if it doesn't have EXIF data.
+		if log.Is(err, jpegstructure.ErrNoExif) == true {
+			return nil
+		}
+
+		log.Panic(err)
+	}
+
+	gpsIfd, err := rootIfd.ChildWithIfdPath(exif.IfdPathStandardGps)
+	if err != nil {
+		// Skip if no GPS data.
+		if log.Is(err, exif.ErrTagNotFound) == true {
+			return nil
+		}
+
+		log.Panic(err)
+	}
+
+	gi, err := gpsIfd.GpsInfo()
+	if err != nil {
+		imageLogger.Errorf(nil, err, "Could not extract GPS info: [%s]", filepath)
+		return nil
+	}
+
+	index.Add(
+		filepath,
+		gi.Timestamp,
+		gi.Latitude.Decimal(),
+		gi.Longitude.Decimal(),
+		uint64(gi.S2CellId()))
 
 	return nil
 }

@@ -15,11 +15,14 @@ func TestGeographicCollector_ReadFromPath(t *testing.T) {
 	err = gc.ReadFromPath(testAssetsPath)
 	log.PanicIf(err)
 
-	// TODO(dustin): !! Finish. We need to try and extract coordinates and store in the index. Then, we can verify.
+	if len(gc.index.ts) != 1 {
+		t.Fatalf("Expected exactly one geographic record to be stored: %v\n", gc.index.ts)
+	} else if gc.index.ts[0].Time.String() != "2018-04-29 01:22:57 +0000 UTC" {
+		t.Fatalf("Timestamp of geographic record is not correct: [%s]", gc.index.ts[0].Time)
+	}
 
-	// if len(processed) != 1 {
-	// 	t.Fatalf("Did not find the right number of files: %v\n", processed)
-	// } else if processed[0] != path.Join(testAssetsPath, "IMG_20181130_1301493.jpg") {
-	// 	t.Fatalf("Did not find the rightfile: %v\n", processed)
-	// }
+	gr := gc.index.ts[0].Items[0].(GeographicRecord)
+	if gr.S2CellId != 0x5ACC938D4BB4914B {
+		t.Fatalf("S2 cell-ID of geographic record is not correct: (%0X)", gr.S2CellId)
+	}
 }
