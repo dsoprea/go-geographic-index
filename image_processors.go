@@ -9,10 +9,16 @@ import (
 )
 
 var (
-	imageLogger = log.NewLogger("geoindex.image")
+	ipLogger = log.NewLogger("geoindex.image_processors")
 )
 
 func JpegImageFileProcessor(index *Index, filepath string) (err error) {
+	defer func() {
+		if state := recover(); state != nil {
+			err = log.Wrap(state.(error))
+		}
+	}()
+
 	jmp := jpegstructure.NewJpegMediaParser()
 
 	data, err := ioutil.ReadFile(filepath)
@@ -43,7 +49,7 @@ func JpegImageFileProcessor(index *Index, filepath string) (err error) {
 
 	gi, err := gpsIfd.GpsInfo()
 	if err != nil {
-		imageLogger.Errorf(nil, err, "Could not extract GPS info: [%s]", filepath)
+		ipLogger.Errorf(nil, err, "Could not extract GPS info: [%s]", filepath)
 		return nil
 	}
 

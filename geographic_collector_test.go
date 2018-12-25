@@ -6,7 +6,7 @@ import (
 	"github.com/dsoprea/go-logging"
 )
 
-func TestGeographicCollector_ReadFromPath(t *testing.T) {
+func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 	gc := NewGeographicCollector()
 
 	err := RegisterImageFileProcessors(gc)
