@@ -1,6 +1,7 @@
 package geoindex
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/dsoprea/go-time-index"
@@ -21,6 +22,10 @@ type GeographicRecord struct {
 	Latitude  float64
 	Longitude float64
 	S2CellId  uint64
+}
+
+func (gr GeographicRecord) String() string {
+	return fmt.Sprintf("GeographicRecord<F=[%s] LAT=[%.6f] LON=[%.6f] CELL=[%d]>", gr.Filepath, gr.Latitude, gr.Longitude, gr.S2CellId)
 }
 
 func (index *Index) Add(filepath string, timestamp time.Time, latitude float64, longitude float64, s2CellId uint64) {

@@ -1,6 +1,8 @@
 package geoindex
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/dsoprea/go-logging"
@@ -12,17 +14,48 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 	err := RegisterImageFileProcessors(gc)
 	log.PanicIf(err)
 
+	err = RegisterDataFileProcessors(gc)
+	log.PanicIf(err)
+
 	err = gc.ReadFromPath(testAssetsPath)
 	log.PanicIf(err)
 
-	if len(gc.index.ts) != 1 {
-		t.Fatalf("Expected exactly one geographic record to be stored: %v\n", gc.index.ts)
-	} else if gc.index.ts[0].Time.String() != "2018-04-29 01:22:57 +0000 UTC" {
-		t.Fatalf("Timestamp of geographic record is not correct: [%s]", gc.index.ts[0].Time)
+	actualTimestamps := make([]string, 0)
+
+	for _, timeItem := range gc.index.ts {
+		actualTimestamps = append(actualTimestamps, timeItem.Time.String())
 	}
 
-	gr := gc.index.ts[0].Items[0].(GeographicRecord)
-	if gr.S2CellId != 0x5ACC938D4BB4914B {
-		t.Fatalf("S2 cell-ID of geographic record is not correct: (%0X)", gr.S2CellId)
+	expectedTimestamps := []string{
+		"2009-10-17 18:37:26 +0000 UTC",
+		"2009-10-17 18:37:31 +0000 UTC",
+		"2009-10-17 18:37:34 +0000 UTC",
+		"2018-04-29 01:22:57 +0000 UTC",
+	}
+
+	if reflect.DeepEqual(actualTimestamps, expectedTimestamps) != true {
+		t.Fatalf("Records incorrect (timestamps): %v", actualTimestamps)
+	}
+
+	actualData := make([]string, 0)
+
+	for _, timeItem := range gc.index.ts {
+		gr := timeItem.Items[0].(GeographicRecord)
+
+		phrase := fmt.Sprintf("[%s] [%X]", timeItem.Time, gr.S2CellId)
+		actualData = append(actualData, phrase)
+	}
+
+	actualData = actualData
+
+	expectedData := []string{
+		"[2009-10-17 18:37:26 +0000 UTC] [1C58D0481A0B0C7B]",
+		"[2009-10-17 18:37:31 +0000 UTC] [1C58D0481A0B0C7B]",
+		"[2009-10-17 18:37:34 +0000 UTC] [1C58D0481A0B0C7B]",
+		"[2018-04-29 01:22:57 +0000 UTC] [5ACC938D4BB4914B]",
+	}
+
+	if reflect.DeepEqual(actualData, expectedData) != true {
+		t.Fatalf("Records incorrect (data): %v", actualData)
 	}
 }
