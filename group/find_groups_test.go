@@ -18,6 +18,10 @@ const (
     oneDay = time.Hour * 24
 )
 
+var (
+    epochUtc = time.Unix(0, 0).UTC()
+)
+
 func TestFindGroups_AddUnassigned(t *testing.T) {
     fg := NewFindGroups(nil, nil, nil)
 
@@ -89,14 +93,14 @@ func getTestLocationIndex(timeBase time.Time) (locationIndex *geoindex.Index) {
     }
 
     for filepath, x := range timeSeries {
-        locationIndex.Add("some source", filepath, x.timestamp, true, x.latitude, x.longitude, 0, nil)
+        locationIndex.Add(geoindex.SourceGeographicGpx, filepath, x.timestamp, true, x.latitude, x.longitude, 0, nil)
     }
 
     return locationIndex
 }
 
 func TestFindGroups_FindLocationByTime_ExactMatch(t *testing.T) {
-    timeBase := time.Time{}
+    timeBase := epochUtc
     locationIndex := getTestLocationIndex(timeBase)
 
     fg := NewFindGroups(locationIndex, nil, nil)
@@ -133,7 +137,7 @@ func TestFindGroups_FindLocationByTime_ExactMatch(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_JustBeforeLocationRecord(t *testing.T) {
-    timeBase := time.Time{}
+    timeBase := epochUtc
     locationIndex := getTestLocationIndex(timeBase)
 
     fg := NewFindGroups(locationIndex, nil, nil)
@@ -170,7 +174,7 @@ func TestFindGroups_FindLocationByTime_JustBeforeLocationRecord(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_JustAfterLocationRecord(t *testing.T) {
-    timeBase := time.Time{}
+    timeBase := epochUtc
     locationIndex := getTestLocationIndex(timeBase)
 
     fg := NewFindGroups(locationIndex, nil, nil)
@@ -207,7 +211,7 @@ func TestFindGroups_FindLocationByTime_JustAfterLocationRecord(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_RoundUpToLocationRecord(t *testing.T) {
-    timeBase := time.Time{}
+    timeBase := epochUtc
     locationIndex := getTestLocationIndex(timeBase)
 
     fg := NewFindGroups(locationIndex, nil, nil)
@@ -244,7 +248,7 @@ func TestFindGroups_FindLocationByTime_RoundUpToLocationRecord(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_RoundDownToLocationRecord(t *testing.T) {
-    timeBase := time.Time{}
+    timeBase := epochUtc
     locationIndex := getTestLocationIndex(timeBase)
 
     fg := NewFindGroups(locationIndex, nil, nil)
@@ -281,7 +285,7 @@ func TestFindGroups_FindLocationByTime_RoundDownToLocationRecord(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_NoMatch(t *testing.T) {
-    timeBase := time.Time{}
+    timeBase := epochUtc
     locationIndex := getTestLocationIndex(timeBase)
 
     fg := NewFindGroups(locationIndex, nil, nil)
@@ -320,46 +324,49 @@ func getTestImageIndex(timeBase time.Time) (imageIndex *geoindex.Index) {
     // Dresden
     dresdenCoordinates := []float64 { 51.05089, 13.73832 }
 
+    // Note that we also mess-up the order in order to test that it's internally 
+    // sorted.
+
     timeSeries := map[string]struct {
         timestamp time.Time
         latitude float64
         longitude float64
     } {
-        "file00.jpg": { timeBase.Add(time.Hour * 0 + time.Minute * 0), chicagoCoordinates[0], chicagoCoordinates[1] },
         "file01.jpg": { timeBase.Add(time.Hour * 0 + time.Minute * 1), chicagoCoordinates[0], chicagoCoordinates[1] },
-        "file02.jpg": { timeBase.Add(time.Hour * 0 + time.Minute * 2), chicagoCoordinates[0], chicagoCoordinates[1] },
-        "file03.jpg": { timeBase.Add(time.Hour * 0 + time.Minute * 3), chicagoCoordinates[0], chicagoCoordinates[1] },
+        "file00.jpg": { timeBase.Add(time.Hour * 0 + time.Minute * 0), chicagoCoordinates[0], chicagoCoordinates[1] },
         "file04.jpg": { timeBase.Add(time.Hour * 0 + time.Minute * 4), chicagoCoordinates[0], chicagoCoordinates[1] },
+        "file03.jpg": { timeBase.Add(time.Hour * 0 + time.Minute * 3), chicagoCoordinates[0], chicagoCoordinates[1] },
+        "file02.jpg": { timeBase.Add(time.Hour * 0 + time.Minute * 2), chicagoCoordinates[0], chicagoCoordinates[1] },
 
-        "file10.jpg": { timeBase.Add(time.Hour * 1 + time.Minute * 0), detroitCoordinates[0], detroitCoordinates[1] },
         "file11.jpg": { timeBase.Add(time.Hour * 1 + time.Minute * 5), detroitCoordinates[0], detroitCoordinates[1] },
-        "file12.jpg": { timeBase.Add(time.Hour * 1 + time.Minute * 10), detroitCoordinates[0], detroitCoordinates[1] },
-        "file13.jpg": { timeBase.Add(time.Hour * 1 + time.Minute * 15), detroitCoordinates[0], detroitCoordinates[1] },
+        "file10.jpg": { timeBase.Add(time.Hour * 1 + time.Minute * 0), detroitCoordinates[0], detroitCoordinates[1] },
         "file14.jpg": { timeBase.Add(time.Hour * 1 + time.Minute * 20), detroitCoordinates[0], detroitCoordinates[1] },
+        "file13.jpg": { timeBase.Add(time.Hour * 1 + time.Minute * 15), detroitCoordinates[0], detroitCoordinates[1] },
+        "file12.jpg": { timeBase.Add(time.Hour * 1 + time.Minute * 10), detroitCoordinates[0], detroitCoordinates[1] },
 
-        "file20.jpg": { timeBase.Add(time.Hour * 2 + time.Minute * 0), nycCoordinates[0], nycCoordinates[1] },
         "file21.jpg": { timeBase.Add(time.Hour * 2 + time.Minute * 1), nycCoordinates[0], nycCoordinates[1] },
-        "file22.jpg": { timeBase.Add(time.Hour * 2 + time.Minute * 2), nycCoordinates[0], nycCoordinates[1] },
-        "file23.jpg": { timeBase.Add(time.Hour * 2 + time.Minute * 3), nycCoordinates[0], nycCoordinates[1] },
+        "file20.jpg": { timeBase.Add(time.Hour * 2 + time.Minute * 0), nycCoordinates[0], nycCoordinates[1] },
         "file24.jpg": { timeBase.Add(time.Hour * 2 + time.Minute * 4), nycCoordinates[0], nycCoordinates[1] },
+        "file23.jpg": { timeBase.Add(time.Hour * 2 + time.Minute * 3), nycCoordinates[0], nycCoordinates[1] },
+        "file22.jpg": { timeBase.Add(time.Hour * 2 + time.Minute * 2), nycCoordinates[0], nycCoordinates[1] },
 
-        "file30.jpg": { timeBase.Add(time.Hour * 3 + time.Minute * 0), sydneyCoordinates[0], sydneyCoordinates[1] },
         "file31.jpg": { timeBase.Add(time.Hour * 3 + time.Minute * 10), sydneyCoordinates[0], sydneyCoordinates[1] },
-        "file32.jpg": { timeBase.Add(time.Hour * 3 + time.Minute * 20), sydneyCoordinates[0], sydneyCoordinates[1] },
-        "file33.jpg": { timeBase.Add(time.Hour * 3 + time.Minute * 30), sydneyCoordinates[0], sydneyCoordinates[1] },
+        "file30.jpg": { timeBase.Add(time.Hour * 3 + time.Minute * 0), sydneyCoordinates[0], sydneyCoordinates[1] },
         "file34.jpg": { timeBase.Add(time.Hour * 3 + time.Minute * 40), sydneyCoordinates[0], sydneyCoordinates[1] },
+        "file33.jpg": { timeBase.Add(time.Hour * 3 + time.Minute * 30), sydneyCoordinates[0], sydneyCoordinates[1] },
+        "file32.jpg": { timeBase.Add(time.Hour * 3 + time.Minute * 20), sydneyCoordinates[0], sydneyCoordinates[1] },
 
-        "file40.jpg": { timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 0), joCoordinates[0], joCoordinates[1] },
         "file41.jpg": { timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 10), joCoordinates[0], joCoordinates[1] },
-        "file42.jpg": { timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 20), joCoordinates[0], joCoordinates[1] },
-        "file43.jpg": { timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 30), joCoordinates[0], joCoordinates[1] },
+        "file40.jpg": { timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 0), joCoordinates[0], joCoordinates[1] },
         "file44.jpg": { timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 40), joCoordinates[0], joCoordinates[1] },
+        "file43.jpg": { timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 30), joCoordinates[0], joCoordinates[1] },
+        "file42.jpg": { timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 20), joCoordinates[0], joCoordinates[1] },
 
-        "file50.jpg": { timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 0), dresdenCoordinates[0], dresdenCoordinates[1] },
         "file51.jpg": { timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 10), dresdenCoordinates[0], dresdenCoordinates[1] },
-        "file52.jpg": { timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 20), dresdenCoordinates[0], dresdenCoordinates[1] },
-        "file53.jpg": { timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 30), dresdenCoordinates[0], dresdenCoordinates[1] },
+        "file50.jpg": { timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 0), dresdenCoordinates[0], dresdenCoordinates[1] },
         "file54.jpg": { timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 40), dresdenCoordinates[0], dresdenCoordinates[1] },
+        "file53.jpg": { timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 30), dresdenCoordinates[0], dresdenCoordinates[1] },
+        "file52.jpg": { timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 20), dresdenCoordinates[0], dresdenCoordinates[1] },
     }
 
     for filepath, x := range timeSeries {
@@ -369,7 +376,7 @@ func getTestImageIndex(timeBase time.Time) (imageIndex *geoindex.Index) {
             CameraModel: cameraModel,
         }
 
-        imageIndex.Add("some source", filepath, x.timestamp, true, x.latitude, x.longitude, 0, im)
+        imageIndex.Add(geoindex.SourceImageJpeg, filepath, x.timestamp, true, x.latitude, x.longitude, 0, im)
     }
 
     return imageIndex
@@ -415,6 +422,36 @@ func getCityIndex(cityDataFilepath string) *geoattractorindex.CityIndex {
     return ci
 }
 
+func checkGroup(t *testing.T, fg *FindGroups, finishedGroupKey groupKey, finishedGroup []geoindex.GeographicRecord, expectedTimeKey time.Time, expectedCountry, expectedCity string, expectedFilenames []string) {
+    if finishedGroupKey.TimeKey != expectedTimeKey {
+        t.Fatalf("Time-key not correct: [%s] != [%s]\n", finishedGroupKey.TimeKey, expectedTimeKey)
+    }
+
+    cityLookup := fg.NearestCityIndex()
+    cityRecord := cityLookup[finishedGroupKey.NearestCityKey]
+    if cityRecord.Country != expectedCountry || cityRecord.City != expectedCity {
+        t.Fatalf("Matched city not correct: %s", cityRecord)
+    }
+
+    if finishedGroupKey.ExifCameraModel != "some model" {
+        t.Fatalf("Camera model not correct: [%s]", finishedGroupKey.ExifCameraModel)
+    }
+
+    if len(finishedGroup) != len(expectedFilenames) {
+        t.Fatalf("Group is not the right size: (%d) != (%d)", len(finishedGroup), len(expectedFilenames))
+    }
+
+    for i, gr := range finishedGroup {
+        if gr.Filepath != expectedFilenames[i] {
+            for j, actualGr := range finishedGroup {
+                fmt.Printf("(%d): [%s]\n", j, actualGr.Filepath)
+            }
+
+            t.Fatalf("File-path (%d) in group is not correct: [%s] != [%s]", i, gr.Filepath, expectedFilenames[i])
+        }
+    }
+}
+
 func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
     defer func() {
         if state := recover(); state != nil {
@@ -429,23 +466,93 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
     // be present with at least one entry.
     locationIndex := geoindex.NewIndex()
 
-    timestamp := time.Time{}
-    locationIndex.Add("some source", "file1", timestamp, true, 1.1, 10.1, 0, nil)
+    locationIndex.Add("some source", "file1", epochUtc, true, 1.1, 10.1, 0, nil)
 
-    timeBase := time.Time{}
+    timeBase := epochUtc
     imageIndex := getTestImageIndex(timeBase)
 
     cityDataFilepath := path.Join(testAssetsPath, "allCountries.txt.multiple_major_cities_handpicked")
     ci := getCityIndex(cityDataFilepath)
 
     fg := NewFindGroups(locationIndex, imageIndex, ci)
-    
+
     finishedGroupKey, finishedGroup, err := fg.FindNext()
     log.PanicIf(err)
 
-    fmt.Printf("%s\n", finishedGroupKey)
-    
-    for i, gr := range finishedGroup {
-        fmt.Printf("%d: %s\n", i, gr)
+    alignedTimeKey := timeBase.Add(time.Hour * 0 + time.Minute * 0)
+
+    checkGroup(
+        t, fg, 
+        finishedGroupKey, 
+        finishedGroup, 
+        alignedTimeKey, 
+        "United States", "Chicago", 
+        []string { "file00.jpg", "file01.jpg", "file02.jpg", "file03.jpg", "file04.jpg" })
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    // Same time-key but different city.
+    checkGroup(
+        t, fg, 
+        finishedGroupKey, 
+        finishedGroup, 
+        alignedTimeKey, 
+        "United States", "Detroit", 
+        []string { "file10.jpg", "file11.jpg", "file12.jpg", "file13.jpg", "file14.jpg" })
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    // Same time-key but different city.
+    checkGroup(
+        t, fg, 
+        finishedGroupKey, 
+        finishedGroup, 
+        alignedTimeKey, 
+        "United States", "New York City", 
+        []string { "file20.jpg", "file21.jpg", "file22.jpg", "file23.jpg", "file24.jpg" })
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    // Same time-key but different city.
+    checkGroup(
+        t, fg, 
+        finishedGroupKey, 
+        finishedGroup, 
+        alignedTimeKey, 
+        "Australia", "Sydney", 
+        []string { "file30.jpg", "file31.jpg", "file32.jpg", "file33.jpg", "file34.jpg" })
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    alignedTimeKey = timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 0)
+
+    checkGroup(
+        t, fg, 
+        finishedGroupKey, 
+        finishedGroup, 
+        alignedTimeKey, 
+        "South Africa", "Johannesburg", 
+        []string { "file40.jpg", "file41.jpg", "file42.jpg", "file43.jpg", "file44.jpg" })
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    alignedTimeKey = timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 0)
+
+    checkGroup(
+        t, fg, 
+        finishedGroupKey, 
+        finishedGroup, 
+        alignedTimeKey, 
+        "Germany", "Dresden", 
+        []string { "file50.jpg", "file51.jpg", "file52.jpg", "file53.jpg", "file54.jpg" })
+
+    _, _, err = fg.FindNext()
+    if err != ErrNoMoreGroups {
+        t.Fatalf("Expected no-more-groups error.")
     }
 }

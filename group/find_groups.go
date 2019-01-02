@@ -26,6 +26,11 @@ const (
     // determine if the current image might belong to the same group as the last
     // image if all of the other factors match.
     DefaultCoalescenceWindowDuration = time.Hour * 24
+
+    // TimeKeyAlignment is a factor that determines how images should be grouped 
+    // together on the basis of their timestamps if their grouping factors are 
+    // otherwise identical.
+    TimeKeyAlignment = 60 * 10
 )
 
 const (
@@ -244,6 +249,7 @@ func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geo
 
             if imageGr.HasGeographic == false {
                 matchedTe, err := fg.findLocationByTime(imageTe)
+
                 if err != nil {
                     if log.Is(err, ErrNoNearLocationRecord) == true {
                         fg.addUnassigned(imageGr, SkipReasonNoNearLocationRecord)
@@ -289,10 +295,14 @@ func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geo
             nearestCityKey := fmt.Sprintf("%s,%s", sourceName, cr.Id)
             fg.nearestCityIndex[nearestCityKey] = cr
 
-            // Determine what timestamp to associate this image to.
+            // Determine what timestamp to associate this image to. The time-
+            // key is the image's time rounded down to a ten-minute alignment.
+
 
             imageUnixTime := imageTe.Time.Unix()
-            timeKey := time.Unix(imageUnixTime - imageUnixTime%10, 0)
+            normalImageUnixTime := imageUnixTime - imageUnixTime % TimeKeyAlignment
+
+            timeKey := time.Unix(normalImageUnixTime, 0).UTC()
 
             // If the current image's time is within X duration of the last
             // group's time-key, use the same time-key. If the last group's
@@ -313,14 +323,22 @@ func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geo
                 gk.ExifCameraModel = metadata.CameraModel
             }
 
-            // TODO(dustin): !! Let's keep an index of the last group seen for *each camera*.
+            // TODO(dustin): !! Let's keep an index of the last group seen for *each camera*. Currently, we'll stop collecting for a group if we happen to encounter pictures from another camera.
             if gk != fg.currentGroupKey {
                 finishedGroupKey, finishedGroup, err = fg.flushCurrentGroup(gk)
                 log.PanicIf(err)
 
                 fg.currentGroup = append(fg.currentGroup, imageGr)
 
-                return finishedGroupKey, finishedGroup, nil
+                if finishedGroupKey.TimeKey.IsZero() == false {
+                    // Should never happen.
+                    if len(finishedGroup) == 0 {
+                        log.Panicf("no grouped images (1)")
+                    }
+
+                    fg.currentImagePosition++
+                    return finishedGroupKey, finishedGroup, nil
+                }
             } else {
                 fg.currentGroup = append(fg.currentGroup, imageGr)
             }
@@ -331,7 +349,15 @@ func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geo
         finishedGroupKey, finishedGroup, err = fg.flushCurrentGroup(groupKey{})
         log.PanicIf(err)
 
-        return finishedGroupKey, finishedGroup, nil
+        if finishedGroupKey.TimeKey.IsZero() == false {
+            // Should never happen.
+            if len(finishedGroup) == 0 {
+                log.Panicf("no grouped images (2)")
+            }
+
+            fg.currentImagePosition++
+            return finishedGroupKey, finishedGroup, nil
+        }
     }
 
     return groupKey{}, nil, ErrNoMoreGroups
