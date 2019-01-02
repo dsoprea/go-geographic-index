@@ -636,55 +636,251 @@ func TestFindGroups_FindNext_ImagesWithLocations_DifferentModels_AlignedWithTime
     // back in an unpredictable order. It won't even be consistent from one 
     // execution to the next. So, store first and check later.
 
-    groups := make(map[string]int, 5)
+    groups := make(map[GroupKey]int, 5)
 
     finishedGroupKey, finishedGroup, err := fg.FindNext()
     log.PanicIf(err)
 
-    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+    groups[finishedGroupKey] = len(finishedGroup)
 
     finishedGroupKey, finishedGroup, err = fg.FindNext()
     log.PanicIf(err)
 
-    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+    groups[finishedGroupKey] = len(finishedGroup)
 
     finishedGroupKey, finishedGroup, err = fg.FindNext()
     log.PanicIf(err)
 
-    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+    groups[finishedGroupKey] = len(finishedGroup)
 
     finishedGroupKey, finishedGroup, err = fg.FindNext()
     log.PanicIf(err)
 
-    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+    groups[finishedGroupKey] = len(finishedGroup)
 
     finishedGroupKey, finishedGroup, err = fg.FindNext()
     log.PanicIf(err)
 
-    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+    groups[finishedGroupKey] = len(finishedGroup)
 
     finishedGroupKey, finishedGroup, err = fg.FindNext()
     log.PanicIf(err)
 
-    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+    groups[finishedGroupKey] = len(finishedGroup)
 
     _, _, err = fg.FindNext()
     if err != ErrNoMoreGroups {
         t.Fatalf("Expected no-more-groups error.")
     }
 
-    expectedGroups := map[string]int {
-        "model1": 5,
-        "model2": 5,
-        "model3": 5,
-        "model4": 5,
-        "model5": 5,
-        "model6": 5,
+    group1Timekey := time.Time{}
+    err = group1Timekey.UnmarshalText([]byte("1970-01-01T00:00:00Z"))
+    log.PanicIf(err)
+
+    group2Timekey := time.Time{}
+    err = group2Timekey.UnmarshalText([]byte("1970-01-01T01:00:00Z"))
+    log.PanicIf(err)
+
+    group4Timekey := time.Time{}
+    err = group4Timekey.UnmarshalText([]byte("1970-01-01T03:00:00Z"))
+    log.PanicIf(err)
+
+    group6Timekey := time.Time{}
+    err = group6Timekey.UnmarshalText([]byte("1970-01-07T00:00:00Z"))
+    log.PanicIf(err)
+
+    group5Timekey := time.Time{}
+    err = group5Timekey.UnmarshalText([]byte("1970-01-03T00:00:00Z"))
+    log.PanicIf(err)
+
+    group3Timekey := time.Time{}
+    err = group3Timekey.UnmarshalText([]byte("1970-01-01T02:00:00Z"))
+    log.PanicIf(err)
+
+    expectedGroups := map[GroupKey]int {
+        GroupKey{ TimeKey: group1Timekey, NearestCityKey: "GeoNames,4887398", CameraModel: "model1" }: 5,
+        GroupKey{ TimeKey: group2Timekey, NearestCityKey: "GeoNames,4990729", CameraModel: "model2" }: 5,
+        GroupKey{ TimeKey: group4Timekey, NearestCityKey: "GeoNames,2147714", CameraModel: "model4" }: 5,
+        GroupKey{ TimeKey: group6Timekey, NearestCityKey: "GeoNames,2935022", CameraModel: "model6" }: 5,
+        GroupKey{ TimeKey: group5Timekey, NearestCityKey: "GeoNames,993800", CameraModel: "model5" }: 5,
+        GroupKey{ TimeKey: group3Timekey, NearestCityKey: "GeoNames,5128581", CameraModel: "model3" }: 5,
     }
 
     if reflect.DeepEqual(groups, expectedGroups) == false {
-        for cameraModel, groupSize := range groups {
-            fmt.Printf("> [%s] (%d)\n", cameraModel, groupSize)
+        for gk, groupSize := range groups {
+            fmt.Printf("> %s (%d)\n", gk, groupSize)
+        }
+
+        t.Fatalf("The correct groups weren't returned.")
+    }
+}
+
+func TestFindGroups_FindNext_ImagesWithLocations_DifferentModels_NotAlignedWithTimeBoundaries(t *testing.T) {
+    defer func() {
+        if state := recover(); state != nil {
+            err := log.Wrap(state.(error))
+            log.PrintError(err)
+
+            panic(err)
+        }
+    }()
+    
+    // locationIndex is just a non-empty index. We won't use it, but it needs to 
+    // be present with at least one entry.
+    locationIndex := geoindex.NewIndex()
+
+    locationIndex.Add("some source", "file1", epochUtc, true, 1.1, 10.1, 0, nil)
+
+    models := map[string]string {
+        "file01.jpg": "model1",
+        "file00.jpg": "model1",
+        "file04.jpg": "model1",
+        "file03.jpg": "model2",
+        "file02.jpg": "model2",
+
+        "file11.jpg": "model3",
+        "file10.jpg": "model3",
+        "file14.jpg": "model4",
+        "file13.jpg": "model4",
+        "file12.jpg": "model4",
+
+        "file21.jpg": "model4",
+        "file20.jpg": "model4",
+        "file24.jpg": "model5",
+        "file23.jpg": "model5",
+        "file22.jpg": "model5",
+
+        "file31.jpg": "model5",
+        "file30.jpg": "model5",
+        "file34.jpg": "model5",
+        "file33.jpg": "model5",
+        "file32.jpg": "model5",
+
+        "file41.jpg": "model5",
+        "file40.jpg": "model5",
+        "file44.jpg": "model5",
+        "file43.jpg": "model5",
+        "file42.jpg": "model5",
+
+        "file51.jpg": "model6",
+        "file50.jpg": "model6",
+        "file54.jpg": "model6",
+        "file53.jpg": "model6",
+        "file52.jpg": "model6",
+    }
+
+    timeBase := epochUtc
+    imageIndex := getTestImageIndex(timeBase, models)
+
+    cityDataFilepath := path.Join(testAssetsPath, "allCountries.txt.multiple_major_cities_handpicked")
+    ci := getCityIndex(cityDataFilepath)
+
+    fg := NewFindGroups(locationIndex, imageIndex, ci)
+
+    // Because of the internal mechanics of the algorithm, we'll get the groups
+    // back in an unpredictable order. It won't even be consistent from one 
+    // execution to the next. So, store first and check later.
+
+    groups := make(map[GroupKey]int, 5)
+
+    finishedGroupKey, finishedGroup, err := fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey] = len(finishedGroup)
+
+    _, _, err = fg.FindNext()
+    if err != ErrNoMoreGroups {
+        t.Fatalf("Expected no-more-groups error.")
+    }
+
+    group1Timekey := time.Time{}
+    err = group1Timekey.UnmarshalText([]byte("1970-01-01T00:00:00Z"))
+    log.PanicIf(err)
+
+    group2aTimekey := time.Time{}
+    err = group2aTimekey.UnmarshalText([]byte("1970-01-01T01:00:00Z"))
+    log.PanicIf(err)
+
+    group2bTimekey := time.Time{}
+    err = group2bTimekey.UnmarshalText([]byte("1970-01-01T01:10:00Z"))
+    log.PanicIf(err)
+
+    group3Timekey := time.Time{}
+    err = group3Timekey.UnmarshalText([]byte("1970-01-01T02:00:00Z"))
+    log.PanicIf(err)
+
+    // group4Timekey := time.Time{}
+    // err = group4Timekey.UnmarshalText([]byte("1970-01-01T03:00:00Z"))
+    // log.PanicIf(err)
+
+    group5Timekey := time.Time{}
+    err = group5Timekey.UnmarshalText([]byte("1970-01-03T00:00:00Z"))
+    log.PanicIf(err)
+
+    group6Timekey := time.Time{}
+    err = group6Timekey.UnmarshalText([]byte("1970-01-07T00:00:00Z"))
+    log.PanicIf(err)
+
+    expectedGroups := map[GroupKey]int {
+        GroupKey{ TimeKey: group1Timekey, NearestCityKey: "GeoNames,4887398", CameraModel: "model1" }: 3,
+        GroupKey{ TimeKey: group1Timekey, NearestCityKey: "GeoNames,4887398", CameraModel: "model2" }: 2,
+
+        GroupKey{ TimeKey: group2aTimekey, NearestCityKey: "GeoNames,4990729", CameraModel: "model3" }: 2,
+        GroupKey{ TimeKey: group2bTimekey, NearestCityKey: "GeoNames,4990729", CameraModel: "model4" }: 3,
+
+        GroupKey{ TimeKey: group2bTimekey, NearestCityKey: "GeoNames,5128581", CameraModel: "model4" }: 2,
+        GroupKey{ TimeKey: group3Timekey, NearestCityKey: "GeoNames,5128581", CameraModel: "model5" }: 3,
+
+        GroupKey{ TimeKey: group3Timekey, NearestCityKey: "GeoNames,2147714", CameraModel: "model5" }: 5,
+
+        GroupKey{ TimeKey: group5Timekey, NearestCityKey: "GeoNames,993800", CameraModel: "model5" }: 5,
+
+        GroupKey{ TimeKey: group6Timekey, NearestCityKey: "GeoNames,2935022", CameraModel: "model6" }: 5,
+    }
+
+    if reflect.DeepEqual(groups, expectedGroups) == false {
+        for gk, groupSize := range groups {
+            fmt.Printf("> %s (%d)\n", gk, groupSize)
         }
 
         t.Fatalf("The correct groups weren't returned.")

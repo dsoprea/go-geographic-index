@@ -54,7 +54,10 @@ type GroupKey struct {
 }
 
 func (gk GroupKey) String() string {
-    return fmt.Sprintf("GroupKey<TIME-KEY=[%s] NEAREST-CITY=[%s] CAMERA-MODEL=[%s]>", gk.TimeKey, gk.NearestCityKey, gk.CameraModel)
+    textBytes, err := gk.TimeKey.MarshalText()
+    log.PanicIf(err)
+
+    return fmt.Sprintf("GroupKey<TIME-KEY=[%s] NEAREST-CITY=[%s] CAMERA-MODEL=[%s]>", string(textBytes), gk.NearestCityKey, gk.CameraModel)
 }
 
 type FindGroups struct {
