@@ -6,6 +6,7 @@ import (
     "fmt"
     "path"
     "os"
+    "reflect"
 
     "github.com/dsoprea/go-geographic-index"
     "github.com/dsoprea/go-logging"
@@ -309,7 +310,7 @@ func TestFindGroups_FindLocationByTime_NoMatch(t *testing.T) {
     }
 }
 
-func getTestImageIndex(timeBase time.Time) (imageIndex *geoindex.Index) {
+func getTestImageIndex(timeBase time.Time, models map[string]string) (imageIndex *geoindex.Index) {
     imageIndex = geoindex.NewIndex()
 
     // Chicago
@@ -377,6 +378,9 @@ func getTestImageIndex(timeBase time.Time) (imageIndex *geoindex.Index) {
 
     for filepath, x := range timeSeries {
         cameraModel := "some model"
+        if models != nil {
+            cameraModel = models[filepath]
+        }
 
         im := geoindex.ImageMetadata{
             CameraModel: cameraModel,
@@ -458,7 +462,7 @@ func checkGroup(fg *FindGroups, finishedGroupKey GroupKey, finishedGroup []geoin
     }
 }
 
-func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
+func TestFindGroups_FindNext_ImagesWithLocations_SameModel(t *testing.T) {
     defer func() {
         if state := recover(); state != nil {
             err := log.Wrap(state.(error))
@@ -475,7 +479,7 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
     locationIndex.Add("some source", "file1", epochUtc, true, 1.1, 10.1, 0, nil)
 
     timeBase := epochUtc
-    imageIndex := getTestImageIndex(timeBase)
+    imageIndex := getTestImageIndex(timeBase, nil)
 
     cityDataFilepath := path.Join(testAssetsPath, "allCountries.txt.multiple_major_cities_handpicked")
     ci := getCityIndex(cityDataFilepath)
@@ -560,5 +564,129 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
     _, _, err = fg.FindNext()
     if err != ErrNoMoreGroups {
         t.Fatalf("Expected no-more-groups error.")
+    }
+}
+
+// TODO(dustin): !! Still need to test images without locations (which will be assigned from data).
+// TODO(dustin): !! Still need to test grouping when models are not aligned with time boundaries
+
+func TestFindGroups_FindNext_ImagesWithLocations_DifferentModels_AlignedWithTimeBoundaries(t *testing.T) {
+    defer func() {
+        if state := recover(); state != nil {
+            err := log.Wrap(state.(error))
+            log.PrintError(err)
+
+            panic(err)
+        }
+    }()
+    
+    // locationIndex is just a non-empty index. We won't use it, but it needs to 
+    // be present with at least one entry.
+    locationIndex := geoindex.NewIndex()
+
+    locationIndex.Add("some source", "file1", epochUtc, true, 1.1, 10.1, 0, nil)
+
+    models := map[string]string {
+        "file01.jpg": "model1",
+        "file00.jpg": "model1",
+        "file04.jpg": "model1",
+        "file03.jpg": "model1",
+        "file02.jpg": "model1",
+
+        "file11.jpg": "model2",
+        "file10.jpg": "model2",
+        "file14.jpg": "model2",
+        "file13.jpg": "model2",
+        "file12.jpg": "model2",
+
+        "file21.jpg": "model3",
+        "file20.jpg": "model3",
+        "file24.jpg": "model3",
+        "file23.jpg": "model3",
+        "file22.jpg": "model3",
+
+        "file31.jpg": "model4",
+        "file30.jpg": "model4",
+        "file34.jpg": "model4",
+        "file33.jpg": "model4",
+        "file32.jpg": "model4",
+
+        "file41.jpg": "model5",
+        "file40.jpg": "model5",
+        "file44.jpg": "model5",
+        "file43.jpg": "model5",
+        "file42.jpg": "model5",
+
+        "file51.jpg": "model6",
+        "file50.jpg": "model6",
+        "file54.jpg": "model6",
+        "file53.jpg": "model6",
+        "file52.jpg": "model6",
+    }
+
+    timeBase := epochUtc
+    imageIndex := getTestImageIndex(timeBase, models)
+
+    cityDataFilepath := path.Join(testAssetsPath, "allCountries.txt.multiple_major_cities_handpicked")
+    ci := getCityIndex(cityDataFilepath)
+
+    fg := NewFindGroups(locationIndex, imageIndex, ci)
+
+    // Because of the internal mechanics of the algorithm, we'll get the groups
+    // back in an unpredictable order. It won't even be consistent from one 
+    // execution to the next. So, store first and check later.
+
+    groups := make(map[string]int, 5)
+
+    finishedGroupKey, finishedGroup, err := fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+
+    finishedGroupKey, finishedGroup, err = fg.FindNext()
+    log.PanicIf(err)
+
+    groups[finishedGroupKey.CameraModel] = len(finishedGroup)
+
+    _, _, err = fg.FindNext()
+    if err != ErrNoMoreGroups {
+        t.Fatalf("Expected no-more-groups error.")
+    }
+
+    expectedGroups := map[string]int {
+        "model1": 5,
+        "model2": 5,
+        "model3": 5,
+        "model4": 5,
+        "model5": 5,
+        "model6": 5,
+    }
+
+    if reflect.DeepEqual(groups, expectedGroups) == false {
+        for cameraModel, groupSize := range groups {
+            fmt.Printf("> [%s] (%d)\n", cameraModel, groupSize)
+        }
+
+        t.Fatalf("The correct groups weren't returned.")
     }
 }

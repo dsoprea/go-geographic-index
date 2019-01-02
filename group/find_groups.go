@@ -239,6 +239,26 @@ func (fg *FindGroups) flushCurrentGroup(nextGroupKey GroupKey) (finishedGroupKey
 
 // FindNext returns the next set of grouped-images along with the actual
 // grouping factors.
+//
+//
+// BIG FAT NOTE ON ORDERING
+// ==
+//
+// We internally enumerate the previously-loaded time-ordered images and store 
+// them into a hash, keyed by camera-model. The camera-model-based storage is 
+// there to prevent multiple sets of overlapping images from interfering with 
+// how we group images. As a result, when the camera-model changes from one 
+// image to the next, the images previously grouped for a given model will stay
+// in the buffer until the very end until we've seen all images and begin to 
+// flush the buffered groups of images. *At this point*, which groups of 
+// buffered images will be returned first will depend on Go's hash algorithm. 
+// Whichever model is visited in the `currentGroup`/`currentGroupKey` hashes 
+// first on every call to this function will determine that.
+//
+// Note that the above ordering behavior only applies when only the model 
+// changes from one image to the next. If other grouping factors change but the 
+// model stays the same, the images already collected for that model will be 
+// returned immediately.
 func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geoindex.GeographicRecord, err error) {
     defer func() {
         if state := recover(); state != nil {
@@ -275,6 +295,7 @@ func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geo
         imageTe := imageIndexTs[fg.currentImagePosition]
         for _, item := range imageTe.Items {
             imageGr := item.(geoindex.GeographicRecord)
+            // fmt.Printf("VISIT: %s\n", imageGr)
 
             latitude := imageGr.Latitude
             longitude := imageGr.Longitude
@@ -357,12 +378,16 @@ func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geo
 
             currentGroupKey, currentGroupKeyFound := fg.currentGroupKey[cameraModel]
             if currentGroupKeyFound == false {
+                // fmt.Printf("ADD: No group keys for model [%s] already stored.\n", cameraModel)
+
                 fg.currentGroupKey[cameraModel] = gk
 
                 fg.currentGroup[cameraModel] = []geoindex.GeographicRecord {
                     imageGr,
                 }
             } else if gk != currentGroupKey {
+                // fmt.Printf("ADD: Group key DIFFERENT THAN PREVIOUS for model [%s]: %s != %s\n", cameraModel, gk, currentGroupKey)
+
                 finishedGroupKey, finishedGroup, err = fg.flushCurrentGroup(gk)
                 log.PanicIf(err)
 
@@ -379,6 +404,8 @@ func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geo
                     return finishedGroupKey, finishedGroup, nil
                 }
             } else {
+                // fmt.Printf("ADD: Group key SAME AS PREVIOUS for model [%s]: %s\n", cameraModel, gk)
+
                 if existingGroup, found := fg.currentGroup[cameraModel]; found == true {
                     fg.currentGroup[cameraModel] = append(existingGroup, imageGr)
                 } else {
