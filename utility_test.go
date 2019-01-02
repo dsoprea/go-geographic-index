@@ -39,8 +39,6 @@ FilesRead:
 
 	checkedPathsSs := sort.StringSlice([]string{
 		path.Join(appPath, ".git", "objects"),
-		path.Join(appPath, "command"),
-		path.Join(appPath, "command", "gi_extract_from_images"),
 		path.Join(appPath, "utility.go"),
 		path.Join(appPath, "utility_test.go"),
 	})

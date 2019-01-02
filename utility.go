@@ -5,9 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/golang/geo/s1"
-	"github.com/golang/geo/s2"
-
 	"github.com/dsoprea/go-logging"
 )
 
@@ -118,15 +115,4 @@ func ListFiles(rootPath string, cb FileListFilterPredicate) (filesC chan Visited
 	}()
 
 	return filesC, errC
-}
-
-func S2CellIdFromCoordinates(latitude, longitude float64) uint64 {
-	ll := s2.LatLng{
-		s1.Angle(latitude),
-		s1.Angle(longitude),
-	}
-
-	ll.Normalized()
-
-	return uint64(s2.CellIDFromLatLng(ll))
 }
