@@ -47,13 +47,13 @@ type UnassignedRecord struct {
     Reason     string
 }
 
-type groupKey struct {
+type GroupKey struct {
     TimeKey         time.Time
     NearestCityKey  string
     ExifCameraModel string
 }
 
-func (gk groupKey) String() string {
+func (gk GroupKey) String() string {
     return fmt.Sprintf("GroupKey<TIME-KEY=[%s] NEAREST-CITY=[%s] CAMERA-MODEL=[%s]>", gk.TimeKey, gk.NearestCityKey, gk.ExifCameraModel)
 }
 
@@ -64,7 +64,7 @@ type FindGroups struct {
     currentImagePosition int
     cityIndex            *geoattractorindex.CityIndex
     nearestCityIndex     map[string]geoattractor.CityRecord
-    currentGroupKey      groupKey
+    currentGroupKey      GroupKey
     currentGroup         []geoindex.GeographicRecord
 
     roundingWindowDuration    time.Duration
@@ -204,7 +204,7 @@ func (fg *FindGroups) findLocationByTime(imageTe timeindex.TimeEntry) (matchedTe
     return matchedTe, nil
 }
 
-func (fg *FindGroups) flushCurrentGroup(nextGroupKey groupKey) (finishedGroupKey groupKey, finishedGroup []geoindex.GeographicRecord, err error) {
+func (fg *FindGroups) flushCurrentGroup(nextGroupKey GroupKey) (finishedGroupKey GroupKey, finishedGroup []geoindex.GeographicRecord, err error) {
     defer func() {
         if state := recover(); state != nil {
             err = log.Wrap(state.(error))
@@ -222,7 +222,7 @@ func (fg *FindGroups) flushCurrentGroup(nextGroupKey groupKey) (finishedGroupKey
 
 // FindNext returns the next set of grouped-images along with the actual
 // grouping factors.
-func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geoindex.GeographicRecord, err error) {
+func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geoindex.GeographicRecord, err error) {
     defer func() {
         if state := recover(); state != nil {
             err = log.Wrap(state.(error))
@@ -236,7 +236,7 @@ func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geo
     imageIndexTs := fg.imageIndex.Series()
 
     if fg.currentImagePosition >= len(imageIndexTs) {
-        return groupKey{}, nil, ErrNoMoreGroups
+        return GroupKey{}, nil, ErrNoMoreGroups
     }
 
     for ; fg.currentImagePosition < len(imageIndexTs); fg.currentImagePosition++ {
@@ -313,7 +313,7 @@ func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geo
 
             // Build the group key.
 
-            gk := groupKey{
+            gk := GroupKey{
                 TimeKey:        timeKey,
                 NearestCityKey: nearestCityKey,
             }
@@ -346,7 +346,7 @@ func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geo
     }
 
     if len(fg.currentGroup) > 0 {
-        finishedGroupKey, finishedGroup, err = fg.flushCurrentGroup(groupKey{})
+        finishedGroupKey, finishedGroup, err = fg.flushCurrentGroup(GroupKey{})
         log.PanicIf(err)
 
         if finishedGroupKey.TimeKey.IsZero() == false {
@@ -360,5 +360,5 @@ func (fg *FindGroups) FindNext() (finishedGroupKey groupKey, finishedGroup []geo
         }
     }
 
-    return groupKey{}, nil, ErrNoMoreGroups
+    return GroupKey{}, nil, ErrNoMoreGroups
 }

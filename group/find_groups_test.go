@@ -422,7 +422,7 @@ func getCityIndex(cityDataFilepath string) *geoattractorindex.CityIndex {
     return ci
 }
 
-func checkGroup(t *testing.T, fg *FindGroups, finishedGroupKey groupKey, finishedGroup []geoindex.GeographicRecord, expectedTimeKey time.Time, expectedCountry, expectedCity string, expectedFilenames []string) {
+func checkGroup(t *testing.T, fg *FindGroups, finishedGroupKey GroupKey, finishedGroup []geoindex.GeographicRecord, expectedTimeKey time.Time, expectedCountry, expectedCity string, expectedFilenames []string) {
     if finishedGroupKey.TimeKey != expectedTimeKey {
         t.Fatalf("Time-key not correct: [%s] != [%s]\n", finishedGroupKey.TimeKey, expectedTimeKey)
     }
