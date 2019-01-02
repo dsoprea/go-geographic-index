@@ -23,7 +23,13 @@ var (
 )
 
 func TestFindGroups_AddUnassigned(t *testing.T) {
-    fg := NewFindGroups(nil, nil, nil)
+    // locationIndex is just a non-empty index. We won't use it, but it needs to 
+    // be present with at least one entry.
+    locationIndex := geoindex.NewIndex()
+
+    locationIndex.Add("some source", "file1", epochUtc, true, 1.1, 10.1, 0, nil)
+
+    fg := NewFindGroups(locationIndex, nil, nil)
 
     gr := geoindex.GeographicRecord{
         S2CellId: 123,
@@ -422,23 +428,23 @@ func getCityIndex(cityDataFilepath string) *geoattractorindex.CityIndex {
     return ci
 }
 
-func checkGroup(t *testing.T, fg *FindGroups, finishedGroupKey GroupKey, finishedGroup []geoindex.GeographicRecord, expectedTimeKey time.Time, expectedCountry, expectedCity string, expectedFilenames []string) {
+func checkGroup(fg *FindGroups, finishedGroupKey GroupKey, finishedGroup []geoindex.GeographicRecord, expectedTimeKey time.Time, expectedCountry, expectedCity string, expectedFilenames []string) {
     if finishedGroupKey.TimeKey != expectedTimeKey {
-        t.Fatalf("Time-key not correct: [%s] != [%s]\n", finishedGroupKey.TimeKey, expectedTimeKey)
+        log.Panicf("Time-key not correct: [%s] != [%s]\n", finishedGroupKey.TimeKey, expectedTimeKey)
     }
 
     cityLookup := fg.NearestCityIndex()
     cityRecord := cityLookup[finishedGroupKey.NearestCityKey]
     if cityRecord.Country != expectedCountry || cityRecord.City != expectedCity {
-        t.Fatalf("Matched city not correct: %s", cityRecord)
+        log.Panicf("Matched city not correct: %s", cityRecord)
     }
 
-    if finishedGroupKey.ExifCameraModel != "some model" {
-        t.Fatalf("Camera model not correct: [%s]", finishedGroupKey.ExifCameraModel)
+    if finishedGroupKey.CameraModel != "some model" {
+        log.Panicf("Camera model not correct: [%s]", finishedGroupKey.CameraModel)
     }
 
     if len(finishedGroup) != len(expectedFilenames) {
-        t.Fatalf("Group is not the right size: (%d) != (%d)", len(finishedGroup), len(expectedFilenames))
+        log.Panicf("Group is not the right size: (%d) != (%d)", len(finishedGroup), len(expectedFilenames))
     }
 
     for i, gr := range finishedGroup {
@@ -447,7 +453,7 @@ func checkGroup(t *testing.T, fg *FindGroups, finishedGroupKey GroupKey, finishe
                 fmt.Printf("(%d): [%s]\n", j, actualGr.Filepath)
             }
 
-            t.Fatalf("File-path (%d) in group is not correct: [%s] != [%s]", i, gr.Filepath, expectedFilenames[i])
+            log.Panicf("File-path (%d) in group is not correct: [%s] != [%s]", i, gr.Filepath, expectedFilenames[i])
         }
     }
 }
@@ -482,7 +488,7 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
     alignedTimeKey := timeBase.Add(time.Hour * 0 + time.Minute * 0)
 
     checkGroup(
-        t, fg, 
+        fg, 
         finishedGroupKey, 
         finishedGroup, 
         alignedTimeKey, 
@@ -494,7 +500,7 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
 
     // Same time-key but different city.
     checkGroup(
-        t, fg, 
+        fg, 
         finishedGroupKey, 
         finishedGroup, 
         alignedTimeKey, 
@@ -506,7 +512,7 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
 
     // Same time-key but different city.
     checkGroup(
-        t, fg, 
+        fg, 
         finishedGroupKey, 
         finishedGroup, 
         alignedTimeKey, 
@@ -518,7 +524,7 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
 
     // Same time-key but different city.
     checkGroup(
-        t, fg, 
+        fg, 
         finishedGroupKey, 
         finishedGroup, 
         alignedTimeKey, 
@@ -531,7 +537,7 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
     alignedTimeKey = timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 0)
 
     checkGroup(
-        t, fg, 
+        fg, 
         finishedGroupKey, 
         finishedGroup, 
         alignedTimeKey, 
@@ -544,7 +550,7 @@ func TestFindGroups_FindNext_ImagesWithLocations(t *testing.T) {
     alignedTimeKey = timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 0)
 
     checkGroup(
-        t, fg, 
+        fg, 
         finishedGroupKey, 
         finishedGroup, 
         alignedTimeKey, 
