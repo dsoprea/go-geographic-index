@@ -320,24 +320,6 @@ func TestFindGroups_FindLocationByTime_NoMatch(t *testing.T) {
 func getTestImageIndex(timeBase time.Time, models map[string]string) (imageIndex *geoindex.Index) {
     imageIndex = geoindex.NewIndex()
 
-    // Chicago
-    chicagoCoordinates := []float64 { 41.85003, -87.65005 }
-
-    // Detroit
-    detroitCoordinates := []float64 { 42.33143, -83.04575 }
-
-    // NYC
-    nycCoordinates := []float64 { 40.71427, -74.00597 }
-
-    // Sydney
-    sydneyCoordinates := []float64 { -33.86785, 151.20732 }
-
-    // Johannesburg
-    joCoordinates := []float64 { -26.20227, 28.04363 }
-
-    // Dresden
-    dresdenCoordinates := []float64 { 51.05089, 13.73832 }
-
     // Note that we also mess-up the order in order to test that it's internally 
     // sorted.
 
@@ -1054,4 +1036,114 @@ func TestFindGroups_FindNext_ImagesWithoutLocations(t *testing.T) {
 
         t.Fatalf("Unassigned files are not correct.")
     }
+}
+
+func getExampleLocationIndex() *geoindex.Index {
+    locationIndex := geoindex.NewIndex()
+    locationIndex.Add(geoindex.SourceGeographicGpx, "file1", epochUtc, true, 1.1, 10.1, nil)
+
+    return locationIndex
+}
+
+func getExampleImageIndex() *geoindex.Index {
+    imageIndex := geoindex.NewIndex()
+
+    timeSeries := map[string]struct {
+        timestamp time.Time
+        latitude float64
+        longitude float64
+    } {
+        "file01.jpg": { epochUtc.Add(time.Hour * 0 + time.Minute * 1), chicagoCoordinates[0], chicagoCoordinates[1] },
+        "file00.jpg": { epochUtc.Add(time.Hour * 0 + time.Minute * 0), chicagoCoordinates[0], chicagoCoordinates[1] },
+        "file04.jpg": { epochUtc.Add(time.Hour * 0 + time.Minute * 4), chicagoCoordinates[0], chicagoCoordinates[1] },
+        "file03.jpg": { epochUtc.Add(time.Hour * 0 + time.Minute * 3), chicagoCoordinates[0], chicagoCoordinates[1] },
+        "file02.jpg": { epochUtc.Add(time.Hour * 0 + time.Minute * 2), chicagoCoordinates[0], chicagoCoordinates[1] },
+    }
+
+    im := geoindex.ImageMetadata{
+        CameraModel: "some model",
+    }
+
+    for filepath, x := range timeSeries {
+        imageIndex.Add(geoindex.SourceImageJpeg, filepath, x.timestamp, true, x.latitude, x.longitude, im)
+    }
+
+    return imageIndex
+}
+
+func ExampleFindGroups_FindNext() {
+    // Load countries.
+
+    countryDataFilepath := path.Join(testAssetsPath, "countryInfo.txt")
+
+    f, err := os.Open(countryDataFilepath)
+    log.PanicIf(err)
+
+    defer f.Close()
+
+    countries, err := geoattractorparse.BuildGeonamesCountryMapping(f)
+    log.PanicIf(err)
+
+    // Load cities.
+
+    gp := geoattractorparse.NewGeonamesParser(countries)
+
+    cityDataFilepath := path.Join(testAssetsPath, "allCountries.txt.multiple_major_cities_handpicked")
+
+    g, err := os.Open(cityDataFilepath)
+    log.PanicIf(err)
+
+    defer g.Close()
+
+    cityIndex := geoattractorindex.NewCityIndex()
+
+    err = cityIndex.Load(gp, g)
+    log.PanicIf(err)
+
+    // We use a couple of fake indices for the purpose of the example.
+    locationIndex := getExampleLocationIndex()
+    imageIndex := getExampleImageIndex()
+
+    // Create FindGroup struct.
+    fg := NewFindGroups(locationIndex, imageIndex, cityIndex)
+
+    // Identify groups.
+
+    for {
+        finishedGroupKey, finishedGroup, err := fg.FindNext()
+        if err != nil {
+            if err == ErrNoMoreGroups {
+                break
+            }
+
+            log.Panic(err)
+        }
+
+        fmt.Printf("GROUP KEY: %s\n", finishedGroupKey)
+
+        nearestCityIndex := fg.NearestCityIndex()
+        cityRecord := nearestCityIndex[finishedGroupKey.NearestCityKey]
+
+        fmt.Printf("CITY: %s\n", cityRecord)
+
+        for i, gr := range finishedGroup {
+            fmt.Printf("(%d): %s\n", i, gr)
+        }
+    }
+
+    // This is here for posterity. We won't have any ungrouped images in this 
+    // example.
+    unassignedRecords := fg.UnassignedRecords()
+    for _, ur := range unassignedRecords {
+        fmt.Printf("UNASSIGNED: %s\n", ur)
+    }
+
+    // Output:
+    // GROUP KEY: GroupKey<TIME-KEY=[1970-01-01T00:00:00Z] NEAREST-CITY=[GeoNames,4887398] CAMERA-MODEL=[some model]>
+    // CITY: CityRecord<ID=[4887398] COUNTRY=[United States] CITY=[Chicago] POP=(2720546) LAT=(41.8500300000) LON=(-87.6500500000)>
+    // (0): GeographicRecord<F=[file00.jpg] LAT=[41.850030] LON=[-87.650050] CELL=[9803822164217287575]>
+    // (1): GeographicRecord<F=[file01.jpg] LAT=[41.850030] LON=[-87.650050] CELL=[9803822164217287575]>
+    // (2): GeographicRecord<F=[file02.jpg] LAT=[41.850030] LON=[-87.650050] CELL=[9803822164217287575]>
+    // (3): GeographicRecord<F=[file03.jpg] LAT=[41.850030] LON=[-87.650050] CELL=[9803822164217287575]>
+    // (4): GeographicRecord<F=[file04.jpg] LAT=[41.850030] LON=[-87.650050] CELL=[9803822164217287575]>
 }
