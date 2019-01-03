@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dsoprea/go-logging"
+	"github.com/randomingenuity/go-utility/filesystem"
 )
 
 var (
@@ -88,7 +89,7 @@ func (gc *GeographicCollector) ReadFromPath(rootPath string) (err error) {
 		return false, nil
 	}
 
-	filesC, errC := ListFiles(rootPath, filter)
+	filesC, errC := rifs.ListFiles(rootPath, filter)
 
 FilesRead:
 
