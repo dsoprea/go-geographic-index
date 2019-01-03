@@ -14,7 +14,7 @@ An in-memory time-series index that can be loaded manually, or automatically fro
 
 Records can be added to the index either directly or automatically from recursively processing a given path and extracting locations from GPS data-log and image files (those supporting and having EXIF). Currently, only GPX files are supported for data-logs and JPEG files for images.
 
-[GeographicCollector.ReadFromPath](https://godoc.org/github.com/dsoprea/go-geographic-index#example-GeographicCollector-ReadFromPath)
+Excerpt from [GeographicCollector.ReadFromPath](https://godoc.org/github.com/dsoprea/go-geographic-index#example-GeographicCollector-ReadFromPath) example:
 
 ```go
 index := NewIndex()
@@ -30,7 +30,7 @@ err = gc.ReadFromPath(testAssetsPath)
 log.PanicIf(err)
 ```
 
-[Index.Add](https://godoc.org/github.com/dsoprea/go-geographic-index#example-Index-Add)
+Excerpt from [Index.Add](https://godoc.org/github.com/dsoprea/go-geographic-index#example-Index-Add) example:
 
 ```go
 index := NewIndex()
@@ -46,7 +46,7 @@ index.Add(SourceGeographicGpx, "data.gpx", epochUtc, hasGeographic, latitude, lo
 
 The ordered index data can also be exported back to a GPX file:
 
-[Index.ExportGpx](https://godoc.org/github.com/dsoprea/go-geographic-index#example-Index-ExportGpx)
+Excerpt from [Index.ExportGpx](https://godoc.org/github.com/dsoprea/go-geographic-index#example-Index-ExportGpx) example:
 
 ```go
 index := NewIndex()

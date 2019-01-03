@@ -16,6 +16,8 @@ Given loaded location and image indices, iteratively identify geographical group
 
 # Example
 
+Excerpt from [FindGroups.FindNext](https://godoc.org/github.com/dsoprea/go-geographic-index/group#example-FindGroups-FindNext) example:
+
 ```go
 fg := NewFindGroups(locationIndex, imageIndex, cityIndex)
 
