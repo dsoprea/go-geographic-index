@@ -10,6 +10,14 @@ An in-memory time-series index that can be loaded manually, or automatically fro
 **This is the underlying storage mechanism of the image-grouping project in [group/](https://github.com/dsoprea/go-geographic-index/tree/master/group).**
 
 
+# Components
+
+- [github.com/dsoprea/go-time-index](https://github.com/dsoprea/go-time-index)
+- [github.com/dsoprea/go-jpeg-image-structure](https://github.com/dsoprea/go-jpeg-image-structure)
+- [github.com/dsoprea/go-exif](https://github.com/dsoprea/go-exif)
+- [github.com/dsoprea/go-gpx](https://github.com/dsoprea/go-gpx)
+
+
 # Examples
 
 Records can be added to the index either directly or automatically from recursively processing a given path and extracting locations from GPS data-log and image files (those supporting and having EXIF). Currently, only GPX files are supported for data-logs and JPEG files for images.

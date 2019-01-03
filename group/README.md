@@ -14,6 +14,12 @@ Given loaded location and image indices, iteratively identify geographical group
 - Images that do not have a location and can not be assigned a location based on the location index will be logged and skipped. See [FindGroups.UnassignedRecords](https://godoc.org/github.com/dsoprea/go-geographic-index/group#FindGroups.UnassignedRecords).
 
 
+# Components
+
+- [github.com/dsoprea/go-geographic-index](https://github.com/dsoprea/go-geographic-index)
+- [github.com/dsoprea/go-geographic-attractor](https://github.com/dsoprea/go-geographic-attractor)
+
+
 # Example
 
 Excerpt from [FindGroups.FindNext](https://godoc.org/github.com/dsoprea/go-geographic-index/group#example-FindGroups-FindNext) example:
