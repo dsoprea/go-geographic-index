@@ -298,11 +298,6 @@ func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geo
         imageTe := imageIndexTs[fg.currentImagePosition]
         for _, item := range imageTe.Items {
             imageGr := item.(geoindex.GeographicRecord)
-            // fmt.Printf("VISIT: %s\n", imageGr)
-
-            latitude := imageGr.Latitude
-            longitude := imageGr.Longitude
-
             if imageGr.HasGeographic == false {
                 matchedTe, err := fg.findLocationByTime(imageTe)
 
@@ -324,8 +319,9 @@ func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geo
                     log.Panicf("location record indicates no geographic data; this should never happen")
                 }
 
-                latitude = locationGr.Latitude
-                longitude = locationGr.Longitude
+                imageGr.Latitude = locationGr.Latitude
+                imageGr.Longitude = locationGr.Longitude
+                imageGr.S2CellId = locationGr.S2CellId
             }
 
             // If we got here, we either have or have found a location for the
@@ -341,7 +337,7 @@ func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geo
 
             // First, find a city to associate this location with.
 
-            sourceName, _, cr, err := fg.cityIndex.Nearest(latitude, longitude)
+            sourceName, _, cr, err := fg.cityIndex.Nearest(imageGr.Latitude, imageGr.Longitude)
             if err != nil {
                 if log.Is(err, geoattractorindex.ErrNoNearestCity) == true {
                     fg.addUnassigned(imageGr, SkipReasonNoNearCity)
@@ -381,16 +377,12 @@ func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geo
 
             currentGroupKey, currentGroupKeyFound := fg.currentGroupKey[cameraModel]
             if currentGroupKeyFound == false {
-                // fmt.Printf("ADD: No group keys for model [%s] already stored.\n", cameraModel)
-
                 fg.currentGroupKey[cameraModel] = gk
 
                 fg.currentGroup[cameraModel] = []geoindex.GeographicRecord {
                     imageGr,
                 }
             } else if gk != currentGroupKey {
-                // fmt.Printf("ADD: Group key DIFFERENT THAN PREVIOUS for model [%s]: %s != %s\n", cameraModel, gk, currentGroupKey)
-
                 finishedGroupKey, finishedGroup, err = fg.flushCurrentGroup(gk)
                 log.PanicIf(err)
 
@@ -407,8 +399,6 @@ func (fg *FindGroups) FindNext() (finishedGroupKey GroupKey, finishedGroup []geo
                     return finishedGroupKey, finishedGroup, nil
                 }
             } else {
-                // fmt.Printf("ADD: Group key SAME AS PREVIOUS for model [%s]: %s\n", cameraModel, gk)
-
                 if existingGroup, found := fg.currentGroup[cameraModel]; found == true {
                     fg.currentGroup[cameraModel] = append(existingGroup, imageGr)
                 } else {
