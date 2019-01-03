@@ -21,8 +21,6 @@ Excerpt from [FindGroups.FindNext](https://godoc.org/github.com/dsoprea/go-geogr
 ```go
 fg := NewFindGroups(locationIndex, imageIndex, cityIndex)
 
-// Identify groups.
-
 for {
     finishedGroupKey, finishedGroup, err := fg.FindNext()
     if err != nil {
