@@ -7,7 +7,7 @@
 
 An in-memory time-series index that can be loaded manually, or automatically from image (using EXIF) and GPS data-log files. In the case of image files, we will attempt to extract a coordinate from GPS information in the EXIF (if present).
 
-**This is the underlying storage mechanism of the image-grouping project in [group/](https://github.com/dsoprea/go-geographic-index/tree/master/group).**
+**This is the underlying storage mechanism of the [go-geographic-autogroup-images](https://github.com/dsoprea/go-geographic-autogroup-images) project.**
 
 
 # Components
