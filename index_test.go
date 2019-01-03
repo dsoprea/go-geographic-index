@@ -4,6 +4,8 @@ import (
   "bytes"
   "testing"
   "fmt"
+  "time"
+  "path"
 
   "github.com/dsoprea/go-logging"
 )
@@ -94,4 +96,30 @@ func ExampleIndex_ExportGpx() {
     //     </trkseg>
     //   </trk>
     // </gpx>
+}
+
+func ExampleIndex_Add() {
+    index := NewIndex()
+    
+    epochUtc := (time.Time{}).UTC()
+    hasGeographic := true
+    latitude := float64(123.456)
+    longitude := float64(789.012)
+    s2CellId := uint64(0)
+    var metadata interface{}
+
+    index.Add(SourceGeographicGpx, "data.gpx", epochUtc, hasGeographic, latitude, longitude, s2CellId, metadata)
+
+    for _, te := range index.Series() {
+        item := te.Items[0]
+        gr := item.(GeographicRecord)
+
+        timestampPhrase, err := te.Time.MarshalText()
+        log.PanicIf(err)
+
+        fmt.Printf("[%s] [%s] [%v] (%.10f) (%.10f)\n", string(timestampPhrase), path.Base(gr.Filepath), gr.HasGeographic, gr.Latitude, gr.Longitude)
+    }
+
+    // Output:
+    // [0001-01-01T00:00:00Z] [data.gpx] [true] (123.4560000000) (789.0120000000)
 }
