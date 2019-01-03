@@ -5,14 +5,14 @@
 
 # Overview
 
-An in-memory time-series index that can be loaded from recursively processing directories of images and GPX files. In the case of image files, we will attempt to extract a coordinate from GPS information in the EXIF (if present).
+An in-memory time-series index that can be loaded manually, or automatically from image (using EXIF) and GPS data-log files. In the case of image files, we will attempt to extract a coordinate from GPS information in the EXIF (if present).
 
 **This is the underlying storage mechanism of the image-grouping tool in [group/](https://github.com/dsoprea/go-geographic-index/tree/master/group).**
 
 
 # Examples
 
-Records can be added to the index either directly or automatically from recursively processing a given path and extracting locations from GPX and JPEG files:
+Records can be added to the index either directly or automatically from recursively processing a given path and extracting locations from GPS data-log and image files (those supporting and having EXIF). Currently, only GPX files are supported for data-logs and JPEG files for images.
 
 [GeographicCollector.ReadFromPath](https://godoc.org/github.com/dsoprea/go-geographic-index#example-GeographicCollector-ReadFromPath)
 
