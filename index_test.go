@@ -105,10 +105,9 @@ func ExampleIndex_Add() {
     hasGeographic := true
     latitude := float64(123.456)
     longitude := float64(789.012)
-    s2CellId := uint64(0)
     var metadata interface{}
 
-    index.Add(SourceGeographicGpx, "data.gpx", epochUtc, hasGeographic, latitude, longitude, s2CellId, metadata)
+    index.Add(SourceGeographicGpx, "data.gpx", epochUtc, hasGeographic, latitude, longitude, metadata)
 
     for _, te := range index.Series() {
         item := te.Items[0]

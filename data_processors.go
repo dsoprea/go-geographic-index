@@ -6,7 +6,6 @@ import (
     "github.com/dsoprea/go-gpx"
     "github.com/dsoprea/go-gpx/reader"
     "github.com/dsoprea/go-logging"
-    "github.com/randomingenuity/go-utility/geographic"
 )
 
 var (
@@ -31,8 +30,6 @@ func GpxDataFileProcessor(index *Index, filepath string) (err error) {
             return nil
         }
 
-        s2CellId := rigeo.S2CellIdFromCoordinates(tp.LatitudeDecimal, tp.LongitudeDecimal)
-
         index.Add(
             SourceGeographicGpx,
             filepath,
@@ -40,7 +37,6 @@ func GpxDataFileProcessor(index *Index, filepath string) (err error) {
             true,
             tp.LatitudeDecimal,
             tp.LongitudeDecimal,
-            s2CellId,
             nil)
 
         return nil

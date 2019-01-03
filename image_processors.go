@@ -82,7 +82,6 @@ func JpegImageFileProcessor(index *Index, filepath string) (err error) {
 	var hasGeographicData bool
 	var latitude float64
 	var longitude float64
-	var s2CellId uint64
 
 	gi, err := gpsIfd.GpsInfo()
 
@@ -92,7 +91,6 @@ func JpegImageFileProcessor(index *Index, filepath string) (err error) {
 		hasGeographicData = true
 		latitude = gi.Latitude.Decimal()
 		longitude = gi.Longitude.Decimal()
-		s2CellId = uint64(gi.S2CellId())
 	}
 
 	// Get the picture timestamp as stored in the EXIF.
@@ -125,7 +123,6 @@ func JpegImageFileProcessor(index *Index, filepath string) (err error) {
 		hasGeographicData,
 		latitude,
 		longitude,
-		s2CellId,
 		im)
 
 	return nil

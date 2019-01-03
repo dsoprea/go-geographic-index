@@ -8,6 +8,7 @@ import (
 	"github.com/dsoprea/go-gpx/writer"
 	"github.com/dsoprea/go-logging"
 	"github.com/dsoprea/go-time-index"
+    "github.com/randomingenuity/go-utility/geographic"
 )
 
 type Index struct {
@@ -42,7 +43,7 @@ func (gr GeographicRecord) String() string {
 	return fmt.Sprintf("GeographicRecord<F=[%s] LAT=[%.6f] LON=[%.6f] CELL=[%d]>", gr.Filepath, gr.Latitude, gr.Longitude, gr.S2CellId)
 }
 
-func (index *Index) Add(sourceName string, filepath string, timestamp time.Time, hasGeographic bool, latitude float64, longitude float64, s2CellId uint64, metadata interface{}) {
+func (index *Index) Add(sourceName string, filepath string, timestamp time.Time, hasGeographic bool, latitude float64, longitude float64, metadata interface{}) {
 	if metadata == nil {
 		metadata = make(map[string]interface{})
 	}
@@ -51,10 +52,14 @@ func (index *Index) Add(sourceName string, filepath string, timestamp time.Time,
 		SourceName:    sourceName,
 		Filepath:      filepath,
 		HasGeographic: hasGeographic,
-		Latitude:      latitude,
-		Longitude:     longitude,
-		S2CellId:      s2CellId,
 		Metadata:      metadata,
+	}
+
+	if hasGeographic == true{
+		gr.Latitude = latitude
+		gr.Longitude = longitude
+		
+		gr.S2CellId = rigeo.S2CellIdFromCoordinates(latitude, longitude)
 	}
 
 	index.ts = index.ts.Add(timestamp, gr)
