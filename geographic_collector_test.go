@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"path"
 
 	"github.com/dsoprea/go-logging"
 )
 
 func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
-	gc := NewGeographicCollector()
+    index := NewIndex()
+	gc := NewGeographicCollector(index)
 
 	err := RegisterImageFileProcessors(gc)
 	log.PanicIf(err)
@@ -70,4 +72,35 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 
 		t.Fatalf("Records incorrect (data).")
 	}
+}
+
+func ExampleGeographicCollector_ReadFromPath() {
+    index := NewIndex()
+	gc := NewGeographicCollector(index)
+
+	err := RegisterImageFileProcessors(gc)
+	log.PanicIf(err)
+
+	err = RegisterDataFileProcessors(gc)
+	log.PanicIf(err)
+
+	err = gc.ReadFromPath(testAssetsPath)
+	log.PanicIf(err)
+
+	for _, te := range index.Series() {
+		item := te.Items[0]
+		gr := item.(GeographicRecord)
+
+		timestampPhrase, err := te.Time.MarshalText()
+		log.PanicIf(err)
+
+		fmt.Printf("[%s] [%s] [%v] (%.10f) (%.10f)\n", string(timestampPhrase), path.Base(gr.Filepath), gr.HasGeographic, gr.Latitude, gr.Longitude)
+	}
+
+	// Output:
+	// [2009-10-17T18:37:26Z] [data.gpx] [true] (47.6445480000) (-122.3268970000)
+	// [2009-10-17T18:37:31Z] [data.gpx] [true] (47.6445480000) (-122.3268970000)
+	// [2009-10-17T18:37:34Z] [data.gpx] [true] (47.6445480000) (-122.3268970000)
+	// [2018-06-09T01:07:30Z] [gps.jpg] [true] (26.5866666667) (-80.0536111111)
+	// [2018-11-30T13:01:49Z] [IMG_20181130_1301493.jpg] [false] (0.0000000000) (0.0000000000)
 }

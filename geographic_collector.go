@@ -33,10 +33,10 @@ type GeographicCollector struct {
 // TODO(dustin): !! Convert to an interface and implement a Name() method.
 type FileProcessor func(index *Index, filepath string) (err error)
 
-func NewGeographicCollector() (gc *GeographicCollector) {
+func NewGeographicCollector(index *Index) (gc *GeographicCollector) {
 	return &GeographicCollector{
 		processors: make(map[string]FileProcessor),
-		index:      NewIndex(),
+		index:      index,
 	}
 }
 

@@ -26,7 +26,8 @@ func TestJpegImageFileProcessor(t *testing.T) {
 }
 
 func TestRegisterImageFileProcessors(t *testing.T) {
-    gc := NewGeographicCollector()
+    index := NewIndex()
+    gc := NewGeographicCollector(index)
 
     err := RegisterImageFileProcessors(gc)
     log.PanicIf(err)

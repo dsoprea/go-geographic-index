@@ -8,23 +8,24 @@ import (
 )
 
 func TestIndex_ExportGpx(t *testing.T) {
-  gc := NewGeographicCollector()
+    index := NewIndex()
+    gc := NewGeographicCollector(index)
 
-  err := RegisterImageFileProcessors(gc)
-  log.PanicIf(err)
+    err := RegisterImageFileProcessors(gc)
+    log.PanicIf(err)
 
-  err = RegisterDataFileProcessors(gc)
-  log.PanicIf(err)
+    err = RegisterDataFileProcessors(gc)
+    log.PanicIf(err)
 
-  err = gc.ReadFromPath(testAssetsPath)
-  log.PanicIf(err)
+    err = gc.ReadFromPath(testAssetsPath)
+    log.PanicIf(err)
 
-  buffer := new(bytes.Buffer)
+    buffer := new(bytes.Buffer)
 
-  err = gc.index.ExportGpx(buffer)
-  log.PanicIf(err)
+    err = gc.index.ExportGpx(buffer)
+    log.PanicIf(err)
 
-  expected := `<?xml version="1.0" encoding="UTF-8"?>
+    expected := `<?xml version="1.0" encoding="UTF-8"?>
 <gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">
   <trk>
     <trkseg>
@@ -44,9 +45,9 @@ func TestIndex_ExportGpx(t *testing.T) {
   </trk>
 </gpx>`
 
-  actual := buffer.String()
+    actual := buffer.String()
 
-  if actual != expected {
-    t.Fatalf("GPX data not correct:\n%s", actual)
-  }
+    if actual != expected {
+      t.Fatalf("GPX data not correct:\n%s", actual)
+    }
 }
