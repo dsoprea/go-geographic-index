@@ -61,7 +61,9 @@ func TestFindGroups_AddUnassigned(t *testing.T) {
     }
 }
 
-func getTestLocationIndex(timeBase time.Time) (locationIndex *geoindex.Index) {
+func getTestLocationIndex() (locationIndex *geoindex.Index) {
+    timeBase := epochUtc
+
     locationIndex = geoindex.NewIndex()
 
     timeSeries := map[string]struct {
@@ -114,12 +116,11 @@ func getTestLocationIndex(timeBase time.Time) (locationIndex *geoindex.Index) {
 }
 
 func TestFindGroups_FindLocationByTime_ExactMatch(t *testing.T) {
-    timeBase := epochUtc
-    locationIndex := getTestLocationIndex(timeBase)
+    locationIndex := getTestLocationIndex()
 
     fg := NewFindGroups(locationIndex, nil, nil)
     
-    imageTimestamp := timeBase.Add(time.Hour * 1 + time.Minute * 10)
+    imageTimestamp := epochUtc.Add(time.Hour * 1 + time.Minute * 10)
     
     imageTe := timeindex.TimeEntry{
         Time: imageTimestamp,
@@ -129,7 +130,7 @@ func TestFindGroups_FindLocationByTime_ExactMatch(t *testing.T) {
     matchedTe, err := fg.findLocationByTime(imageTe)
     log.PanicIf(err)
 
-    expectedLocationTimestamp := timeBase.Add(time.Hour * 1 + time.Minute * 10)
+    expectedLocationTimestamp := epochUtc.Add(time.Hour * 1 + time.Minute * 10)
 
     if matchedTe.Time != expectedLocationTimestamp {
         t.Fatalf("The matched location timestamp is not correct: [%s] != [%s]", matchedTe.Time, expectedLocationTimestamp)
@@ -151,12 +152,11 @@ func TestFindGroups_FindLocationByTime_ExactMatch(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_JustBeforeLocationRecord(t *testing.T) {
-    timeBase := epochUtc
-    locationIndex := getTestLocationIndex(timeBase)
+    locationIndex := getTestLocationIndex()
 
     fg := NewFindGroups(locationIndex, nil, nil)
     
-    imageTimestamp := timeBase.Add(time.Hour * 1 + time.Minute * 9)
+    imageTimestamp := epochUtc.Add(time.Hour * 1 + time.Minute * 9)
     
     imageTe := timeindex.TimeEntry{
         Time: imageTimestamp,
@@ -166,7 +166,7 @@ func TestFindGroups_FindLocationByTime_JustBeforeLocationRecord(t *testing.T) {
     matchedTe, err := fg.findLocationByTime(imageTe)
     log.PanicIf(err)
 
-    expectedLocationTimestamp := timeBase.Add(time.Hour * 1 + time.Minute * 10)
+    expectedLocationTimestamp := epochUtc.Add(time.Hour * 1 + time.Minute * 10)
 
     if matchedTe.Time != expectedLocationTimestamp {
         t.Fatalf("The matched location timestamp is not correct: [%s] != [%s]", matchedTe.Time, expectedLocationTimestamp)
@@ -188,12 +188,11 @@ func TestFindGroups_FindLocationByTime_JustBeforeLocationRecord(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_JustAfterLocationRecord(t *testing.T) {
-    timeBase := epochUtc
-    locationIndex := getTestLocationIndex(timeBase)
+    locationIndex := getTestLocationIndex()
 
     fg := NewFindGroups(locationIndex, nil, nil)
     
-    imageTimestamp := timeBase.Add(time.Hour * 1 + time.Minute * 11)
+    imageTimestamp := epochUtc.Add(time.Hour * 1 + time.Minute * 11)
     
     imageTe := timeindex.TimeEntry{
         Time: imageTimestamp,
@@ -203,7 +202,7 @@ func TestFindGroups_FindLocationByTime_JustAfterLocationRecord(t *testing.T) {
     matchedTe, err := fg.findLocationByTime(imageTe)
     log.PanicIf(err)
 
-    expectedLocationTimestamp := timeBase.Add(time.Hour * 1 + time.Minute * 10)
+    expectedLocationTimestamp := epochUtc.Add(time.Hour * 1 + time.Minute * 10)
 
     if matchedTe.Time != expectedLocationTimestamp {
         t.Fatalf("The matched location timestamp is not correct: [%s] != [%s]", matchedTe.Time, expectedLocationTimestamp)
@@ -225,12 +224,11 @@ func TestFindGroups_FindLocationByTime_JustAfterLocationRecord(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_RoundUpToLocationRecord(t *testing.T) {
-    timeBase := epochUtc
-    locationIndex := getTestLocationIndex(timeBase)
+    locationIndex := getTestLocationIndex()
 
     fg := NewFindGroups(locationIndex, nil, nil)
     
-    imageTimestamp := timeBase.Add(time.Hour * 3 + time.Minute * 16)
+    imageTimestamp := epochUtc.Add(time.Hour * 3 + time.Minute * 16)
     
     imageTe := timeindex.TimeEntry{
         Time: imageTimestamp,
@@ -240,7 +238,7 @@ func TestFindGroups_FindLocationByTime_RoundUpToLocationRecord(t *testing.T) {
     matchedTe, err := fg.findLocationByTime(imageTe)
     log.PanicIf(err)
 
-    expectedLocationTimestamp := timeBase.Add(time.Hour * 3 + time.Minute * 20)
+    expectedLocationTimestamp := epochUtc.Add(time.Hour * 3 + time.Minute * 20)
 
     if matchedTe.Time != expectedLocationTimestamp {
         t.Fatalf("The matched location timestamp is not correct: [%s] != [%s]", matchedTe.Time, expectedLocationTimestamp)
@@ -262,12 +260,11 @@ func TestFindGroups_FindLocationByTime_RoundUpToLocationRecord(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_RoundDownToLocationRecord(t *testing.T) {
-    timeBase := epochUtc
-    locationIndex := getTestLocationIndex(timeBase)
+    locationIndex := getTestLocationIndex()
 
     fg := NewFindGroups(locationIndex, nil, nil)
     
-    imageTimestamp := timeBase.Add(time.Hour * 3 + time.Minute * 14)
+    imageTimestamp := epochUtc.Add(time.Hour * 3 + time.Minute * 14)
     
     imageTe := timeindex.TimeEntry{
         Time: imageTimestamp,
@@ -277,7 +274,7 @@ func TestFindGroups_FindLocationByTime_RoundDownToLocationRecord(t *testing.T) {
     matchedTe, err := fg.findLocationByTime(imageTe)
     log.PanicIf(err)
 
-    expectedLocationTimestamp := timeBase.Add(time.Hour * 3 + time.Minute * 10)
+    expectedLocationTimestamp := epochUtc.Add(time.Hour * 3 + time.Minute * 10)
 
     if matchedTe.Time != expectedLocationTimestamp {
         t.Fatalf("The matched location timestamp is not correct: [%s] != [%s]", matchedTe.Time, expectedLocationTimestamp)
@@ -299,12 +296,11 @@ func TestFindGroups_FindLocationByTime_RoundDownToLocationRecord(t *testing.T) {
 }
 
 func TestFindGroups_FindLocationByTime_NoMatch(t *testing.T) {
-    timeBase := epochUtc
-    locationIndex := getTestLocationIndex(timeBase)
+    locationIndex := getTestLocationIndex()
 
     fg := NewFindGroups(locationIndex, nil, nil)
     
-    imageTimestamp := timeBase.Add(oneDay * 4 + time.Hour * 0 + time.Minute * 0)
+    imageTimestamp := epochUtc.Add(oneDay * 4 + time.Hour * 0 + time.Minute * 0)
     
     imageTe := timeindex.TimeEntry{
         Time: imageTimestamp,
@@ -317,7 +313,9 @@ func TestFindGroups_FindLocationByTime_NoMatch(t *testing.T) {
     }
 }
 
-func getTestImageIndex(timeBase time.Time, models map[string]string) (imageIndex *geoindex.Index) {
+func getTestImageIndex(models map[string]string) (imageIndex *geoindex.Index) {
+    timeBase := epochUtc
+
     imageIndex = geoindex.NewIndex()
 
     // Note that we also mess-up the order in order to test that it's internally 
@@ -465,8 +463,7 @@ func TestFindGroups_FindNext_ImagesWithLocations_SameModel(t *testing.T) {
 
     locationIndex.Add(geoindex.SourceGeographicGpx, "file1", epochUtc, true, 1.1, 10.1, nil)
 
-    timeBase := epochUtc
-    imageIndex := getTestImageIndex(timeBase, nil)
+    imageIndex := getTestImageIndex(nil)
 
     cityDataFilepath := path.Join(testAssetsPath, "allCountries.txt.multiple_major_cities_handpicked")
     ci := getCityIndex(cityDataFilepath)
@@ -476,7 +473,7 @@ func TestFindGroups_FindNext_ImagesWithLocations_SameModel(t *testing.T) {
     finishedGroupKey, finishedGroup, err := fg.FindNext()
     log.PanicIf(err)
 
-    alignedTimeKey := timeBase.Add(time.Hour * 0 + time.Minute * 0)
+    alignedTimeKey := epochUtc.Add(time.Hour * 0 + time.Minute * 0)
 
     checkGroup(
         fg, 
@@ -525,7 +522,7 @@ func TestFindGroups_FindNext_ImagesWithLocations_SameModel(t *testing.T) {
     finishedGroupKey, finishedGroup, err = fg.FindNext()
     log.PanicIf(err)
 
-    alignedTimeKey = timeBase.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 0)
+    alignedTimeKey = epochUtc.Add(oneDay * 2 + time.Hour * 0 + time.Minute * 0)
 
     checkGroup(
         fg, 
@@ -538,7 +535,7 @@ func TestFindGroups_FindNext_ImagesWithLocations_SameModel(t *testing.T) {
     finishedGroupKey, finishedGroup, err = fg.FindNext()
     log.PanicIf(err)
 
-    alignedTimeKey = timeBase.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 0)
+    alignedTimeKey = epochUtc.Add(oneDay * 6 + time.Hour * 0 + time.Minute * 0)
 
     checkGroup(
         fg, 
@@ -608,8 +605,7 @@ func TestFindGroups_FindNext_ImagesWithLocations_DifferentModels_AlignedWithTime
         "file52.jpg": "model6",
     }
 
-    timeBase := epochUtc
-    imageIndex := getTestImageIndex(timeBase, models)
+    imageIndex := getTestImageIndex(models)
 
     cityDataFilepath := path.Join(testAssetsPath, "allCountries.txt.multiple_major_cities_handpicked")
     ci := getCityIndex(cityDataFilepath)
@@ -753,8 +749,7 @@ func TestFindGroups_FindNext_ImagesWithLocations_DifferentModels_NotAlignedWithT
         "file52.jpg": "model6",
     }
 
-    timeBase := epochUtc
-    imageIndex := getTestImageIndex(timeBase, models)
+    imageIndex := getTestImageIndex(models)
 
     cityDataFilepath := path.Join(testAssetsPath, "allCountries.txt.multiple_major_cities_handpicked")
     ci := getCityIndex(cityDataFilepath)
