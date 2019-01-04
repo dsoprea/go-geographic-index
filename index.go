@@ -8,7 +8,7 @@ import (
 	"github.com/dsoprea/go-gpx/writer"
 	"github.com/dsoprea/go-logging"
 	"github.com/dsoprea/go-time-index"
-    "github.com/randomingenuity/go-utility/geographic"
+	"github.com/randomingenuity/go-utility/geographic"
 )
 
 type Index struct {
@@ -21,7 +21,7 @@ func NewIndex() (gi *Index) {
 	}
 }
 
-func (index *Index) Series() (timeindex.TimeSlice) {
+func (index *Index) Series() timeindex.TimeSlice {
 	return index.ts
 }
 
@@ -55,10 +55,10 @@ func (index *Index) Add(sourceName string, filepath string, timestamp time.Time,
 		Metadata:      metadata,
 	}
 
-	if hasGeographic == true{
+	if hasGeographic == true {
 		gr.Latitude = latitude
 		gr.Longitude = longitude
-		
+
 		gr.S2CellId = rigeo.S2CellIdFromCoordinates(latitude, longitude)
 	}
 

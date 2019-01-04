@@ -71,27 +71,31 @@ func JpegImageFileProcessor(index *Index, filepath string) (err error) {
 	}
 
 	gpsIfd, err := rootIfd.ChildWithIfdPath(exif.IfdPathStandardGps)
+
+	hasGps := true
 	if err != nil {
 		// Skip if no GPS data.
 		if log.Is(err, exif.ErrTagNotFound) == true {
-			return nil
+			hasGps = false
+		} else {
+			log.Panic(err)
 		}
-
-		log.Panic(err)
 	}
 
-	var hasGeographicData bool
+	hasGeographicData := false
 	var latitude float64
 	var longitude float64
 
-	gi, err := gpsIfd.GpsInfo()
+	if hasGps == true {
+		gi, err := gpsIfd.GpsInfo()
 
-	if err == nil {
-		// Yes. We have geographic data.
+		if err == nil {
+			// Yes. We have geographic data.
 
-		hasGeographicData = true
-		latitude = gi.Latitude.Decimal()
-		longitude = gi.Longitude.Decimal()
+			hasGeographicData = true
+			latitude = gi.Latitude.Decimal()
+			longitude = gi.Longitude.Decimal()
+		}
 	}
 
 	// Get the picture timestamp as stored in the EXIF.

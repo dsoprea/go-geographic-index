@@ -13,6 +13,8 @@ var (
 	imagesLogger = log.NewLogger("geoindex.images")
 )
 
+// TODO(dustin): !! Rename this file and tests to "collector.go". There's nothing geographic-specific about this file.
+
 // TODO(dustin): Add a mechanism to filter out aberrations in geographic data:
 //
 // Given a sliding window of (n) records in a geographic series sorted by
