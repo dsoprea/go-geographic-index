@@ -27,16 +27,16 @@ var (
 // otherwise dramatically skew the grouping algorithm.
 
 type GeographicCollector struct {
-	processors map[string]FileProcessor
+	processors map[string]FileProcessorFn
 	index      *Index
 }
 
 // TODO(dustin): !! Convert to an interface and implement a Name() method.
-type FileProcessor func(index *Index, filepath string) (err error)
+type FileProcessorFn func(index *Index, filepath string) (err error)
 
 func NewGeographicCollector(index *Index) (gc *GeographicCollector) {
 	return &GeographicCollector{
-		processors: make(map[string]FileProcessor),
+		processors: make(map[string]FileProcessorFn),
 		index:      index,
 	}
 }
@@ -45,7 +45,7 @@ func NewGeographicCollector(index *Index) (gc *GeographicCollector) {
 // extension is case-insensitive and must include the initial period. This can
 // be called more than once with one processor but not more than once for an
 // extension.
-func (gc *GeographicCollector) AddFileProcessor(extension string, processor FileProcessor) (err error) {
+func (gc *GeographicCollector) AddFileProcessor(extension string, processor FileProcessorFn) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))

@@ -2,6 +2,7 @@ package geoindex
 
 import (
 	"io/ioutil"
+	"time"
 
 	"github.com/dsoprea/go-exif"
 	"github.com/dsoprea/go-jpeg-image-structure"
@@ -100,8 +101,17 @@ func JpegImageFileProcessor(index *Index, filepath string) (err error) {
 	timestampPhrase, err := getFirstExifTagStringValue(rootIfd, tagName)
 	log.PanicIf(err)
 
-    timestamp, err := exif.ParseExifFullTimestamp(timestampPhrase)
-    log.PanicIf(err)
+	var timestamp time.Time
+	if timestampPhrase == "" {
+		ipLogger.Warningf(nil, "Image has an empty timestamp: [%s]", filepath)
+		return nil
+	} else {
+		timestamp, err = exif.ParseExifFullTimestamp(timestampPhrase)
+		if err != nil {
+			ipLogger.Warningf(nil, "Image's timestamp is unparseable: [%s] [%s]", filepath, timestampPhrase)
+			return nil
+		}
+	}
 
 	// Get the camera model as stored in the EXIF. It will be empty here if
 	// absent in the EXIF.
