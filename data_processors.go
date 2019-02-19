@@ -1,62 +1,62 @@
 package geoindex
 
 import (
-    "os"
+	"os"
 
-    "github.com/dsoprea/go-gpx"
-    "github.com/dsoprea/go-gpx/reader"
-    "github.com/dsoprea/go-logging"
+	"github.com/dsoprea/go-gpx"
+	"github.com/dsoprea/go-gpx/reader"
+	"github.com/dsoprea/go-logging"
 )
 
 var (
-    dataLogger = log.NewLogger("geoindex.data_processors")
+	dataLogger = log.NewLogger("geoindex.data_processors")
 )
 
-func GpxDataFileProcessor(index *Index, filepath string) (err error) {
-    defer func() {
-        if state := recover(); state != nil {
-            err = log.Wrap(state.(error))
-        }
-    }()
+func GpxDataFileProcessor(index *TimeIndex, filepath string) (err error) {
+	defer func() {
+		if state := recover(); state != nil {
+			err = log.Wrap(state.(error))
+		}
+	}()
 
-    f, err := os.Open(filepath)
-    log.PanicIf(err)
+	f, err := os.Open(filepath)
+	log.PanicIf(err)
 
-    defer f.Close()
+	defer f.Close()
 
-    tpc := func(tp *gpxcommon.TrackPoint) (err error) {
-        if tp.Time.IsZero() == true {
-            dataLogger.Warningf(nil, "Skipping zero-time record: [%s] %s", filepath, tp)
-            return nil
-        }
+	tpc := func(tp *gpxcommon.TrackPoint) (err error) {
+		if tp.Time.IsZero() == true {
+			dataLogger.Warningf(nil, "Skipping zero-time record: [%s] %s", filepath, tp)
+			return nil
+		}
 
-        index.Add(
-            SourceGeographicGpx,
-            filepath,
-            tp.Time,
-            true,
-            tp.LatitudeDecimal,
-            tp.LongitudeDecimal,
-            nil)
+		index.Add(
+			SourceGeographicGpx,
+			filepath,
+			tp.Time,
+			true,
+			tp.LatitudeDecimal,
+			tp.LongitudeDecimal,
+			nil)
 
-        return nil
-    }
+		return nil
+	}
 
-    err = gpxreader.EnumerateTrackPoints(f, tpc)
-    log.PanicIf(err)
+	err = gpxreader.EnumerateTrackPoints(f, tpc)
+	log.PanicIf(err)
 
-    return nil
+	return nil
 }
 
 func RegisterDataFileProcessors(gc *GeographicCollector) (err error) {
-    defer func() {
-        if state := recover(); state != nil {
-            err = log.Wrap(state.(error))
-        }
-    }()
+	defer func() {
+		if state := recover(); state != nil {
+			err = log.Wrap(state.(error))
+		}
+	}()
 
-    err = gc.AddFileProcessor(".gpx", GpxDataFileProcessor)
-    log.PanicIf(err)
+	err = gc.AddFileProcessor(".gpx", GpxDataFileProcessor)
+	log.PanicIf(err)
 
-    return nil
+	return nil
 }

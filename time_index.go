@@ -11,17 +11,17 @@ import (
 	"github.com/randomingenuity/go-utility/geographic"
 )
 
-type Index struct {
+type TimeIndex struct {
 	ts timeindex.TimeSlice
 }
 
-func NewIndex() (gi *Index) {
-	return &Index{
+func NewTimeIndex() (gi *TimeIndex) {
+	return &TimeIndex{
 		ts: make(timeindex.TimeSlice, 0),
 	}
 }
 
-func (index *Index) Series() timeindex.TimeSlice {
+func (index *TimeIndex) Series() timeindex.TimeSlice {
 	return index.ts
 }
 
@@ -43,7 +43,7 @@ func (gr GeographicRecord) String() string {
 	return fmt.Sprintf("GeographicRecord<F=[%s] LAT=[%.6f] LON=[%.6f] CELL=[%d]>", gr.Filepath, gr.Latitude, gr.Longitude, gr.S2CellId)
 }
 
-func (index *Index) Add(sourceName string, filepath string, timestamp time.Time, hasGeographic bool, latitude float64, longitude float64, metadata interface{}) {
+func (index *TimeIndex) Add(sourceName string, filepath string, timestamp time.Time, hasGeographic bool, latitude float64, longitude float64, metadata interface{}) {
 	if metadata == nil {
 		metadata = make(map[string]interface{})
 	}
@@ -69,7 +69,7 @@ func (index *Index) Add(sourceName string, filepath string, timestamp time.Time,
 
 }
 
-func (index *Index) ExportGpx(w io.Writer) (err error) {
+func (index *TimeIndex) ExportGpx(w io.Writer) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))

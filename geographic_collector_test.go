@@ -2,15 +2,15 @@ package geoindex
 
 import (
 	"fmt"
+	"path"
 	"reflect"
 	"testing"
-	"path"
 
 	"github.com/dsoprea/go-logging"
 )
 
 func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
-    index := NewIndex()
+	index := NewTimeIndex()
 	gc := NewGeographicCollector(index)
 
 	err := RegisterImageFileProcessors(gc)
@@ -75,7 +75,7 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 }
 
 func ExampleGeographicCollector_ReadFromPath() {
-    index := NewIndex()
+	index := NewTimeIndex()
 	gc := NewGeographicCollector(index)
 
 	err := RegisterImageFileProcessors(gc)

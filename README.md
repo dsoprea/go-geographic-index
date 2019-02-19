@@ -25,7 +25,7 @@ Records can be added to the index either directly or automatically from recursiv
 Excerpt from [GeographicCollector.ReadFromPath](https://godoc.org/github.com/dsoprea/go-geographic-index#example-GeographicCollector-ReadFromPath) example:
 
 ```go
-index := NewIndex()
+index := NewTimeIndex()
 gc := NewGeographicCollector(index)
 
 err := RegisterImageFileProcessors(gc)
@@ -41,7 +41,7 @@ log.PanicIf(err)
 Excerpt from [Index.Add](https://godoc.org/github.com/dsoprea/go-geographic-index#example-Index-Add) example:
 
 ```go
-index := NewIndex()
+index := NewTimeIndex()
 
 epochUtc := (time.Time{}).UTC()
 hasGeographic := true
@@ -57,7 +57,7 @@ The ordered index data can also be exported back to a GPX file:
 Excerpt from [Index.ExportGpx](https://godoc.org/github.com/dsoprea/go-geographic-index#example-Index-ExportGpx) example:
 
 ```go
-index := NewIndex()
+index := NewTimeIndex()
 gc := NewGeographicCollector(index)
 
 err := RegisterImageFileProcessors(gc)

@@ -30,13 +30,13 @@ var (
 
 type GeographicCollector struct {
 	processors map[string]FileProcessorFn
-	index      *Index
+	index      *TimeIndex
 }
 
 // TODO(dustin): !! Convert to an interface and implement a Name() method.
-type FileProcessorFn func(index *Index, filepath string) (err error)
+type FileProcessorFn func(index *TimeIndex, filepath string) (err error)
 
-func NewGeographicCollector(index *Index) (gc *GeographicCollector) {
+func NewGeographicCollector(index *TimeIndex) (gc *GeographicCollector) {
 	return &GeographicCollector{
 		processors: make(map[string]FileProcessorFn),
 		index:      index,

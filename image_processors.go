@@ -45,7 +45,7 @@ func getFirstExifTagStringValue(rootIfd *exif.Ifd, tagName string) (value string
 	return value, nil
 }
 
-func JpegImageFileProcessor(index *Index, filepath string) (err error) {
+func JpegImageFileProcessor(index *TimeIndex, filepath string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
