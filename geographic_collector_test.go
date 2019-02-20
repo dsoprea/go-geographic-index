@@ -47,7 +47,7 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 	actualData := make([]string, 0)
 
 	for _, timeItem := range gc.index.ts {
-		gr := timeItem.Items[0].(GeographicRecord)
+		gr := timeItem.Items[0].(*GeographicRecord)
 
 		phrase := fmt.Sprintf("[%s] [%X]", timeItem.Time, gr.S2CellId)
 		actualData = append(actualData, phrase)
@@ -65,7 +65,7 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 
 	if reflect.DeepEqual(actualData, expectedData) != true {
 		for i, timeItem := range gc.index.ts {
-			gr := timeItem.Items[0].(GeographicRecord)
+			gr := timeItem.Items[0].(*GeographicRecord)
 
 			fmt.Printf("(%d): [%s] [%X]\n", i, timeItem.Time, gr.S2CellId)
 		}
@@ -89,7 +89,7 @@ func ExampleGeographicCollector_ReadFromPath() {
 
 	for _, te := range index.Series() {
 		item := te.Items[0]
-		gr := item.(GeographicRecord)
+		gr := item.(*GeographicRecord)
 
 		timestampPhrase, err := te.Time.MarshalText()
 		log.PanicIf(err)

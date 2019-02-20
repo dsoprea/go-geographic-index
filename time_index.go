@@ -1,14 +1,12 @@
 package geoindex
 
 import (
-	"fmt"
 	"io"
 	"time"
 
 	"github.com/dsoprea/go-gpx/writer"
 	"github.com/dsoprea/go-logging"
 	"github.com/dsoprea/go-time-index"
-	"github.com/randomingenuity/go-utility/geographic"
 )
 
 type TimeIndex struct {
@@ -25,48 +23,30 @@ func (index *TimeIndex) Series() timeindex.TimeSlice {
 	return index.ts
 }
 
-// GeographicRecord describes a single bit of geographic information, whether
-// it's a actual geographic data entry or an image with geographic data. Note
-// that the naming is a bit of a misnomer since an image may not have
-// geographic data and we might need to *derive* this from geographic data.
-type GeographicRecord struct {
-	Filepath      string
-	HasGeographic bool
-	Latitude      float64
-	Longitude     float64
-	S2CellId      uint64
-	SourceName    string
-	Metadata      interface{}
+func (index *TimeIndex) AddWithRecord(gr *GeographicRecord) (err error) {
+	index.ts = index.ts.Add(gr.Timestamp, gr)
+
+	return nil
 }
 
-func (gr GeographicRecord) String() string {
-	return fmt.Sprintf("GeographicRecord<F=[%s] LAT=[%.6f] LON=[%.6f] CELL=[%d]>", gr.Filepath, gr.Latitude, gr.Longitude, gr.S2CellId)
-}
+// Add adds a record to the time-index. This method is obsolete. Please use
+// `AddWithRecord` instead.
+func (index *TimeIndex) Add(sourceName string, filepath string, timestamp time.Time, hasGeographic bool, latitude float64, longitude float64, metadata interface{}) (err error) {
+	defer func() {
+		if state := recover(); state != nil {
+			err = log.Wrap(state.(error))
+		}
+	}()
 
-func (index *TimeIndex) Add(sourceName string, filepath string, timestamp time.Time, hasGeographic bool, latitude float64, longitude float64, metadata interface{}) {
-	if metadata == nil {
-		metadata = make(map[string]interface{})
-	}
+	gr := NewGeographicRecord(sourceName, filepath, timestamp, hasGeographic, latitude, longitude, metadata)
 
-	gr := GeographicRecord{
-		SourceName:    sourceName,
-		Filepath:      filepath,
-		HasGeographic: hasGeographic,
-		Metadata:      metadata,
-	}
-
-	if hasGeographic == true {
-		gr.Latitude = latitude
-		gr.Longitude = longitude
-
-		gr.S2CellId = rigeo.S2CellIdFromCoordinates(latitude, longitude)
-	}
-
-	index.ts = index.ts.Add(timestamp, gr)
+	err = index.AddWithRecord(gr)
+	log.PanicIf(err)
 
 	// TODO(dustin): !! Convert our file-processors to an interface, implement a Name() method, and then store that name (or the processor) with the data.
 	// TODO(dustin): !! Once we do the above, we can stop passing `sourceName` explicitly.
 
+	return nil
 }
 
 func (index *TimeIndex) ExportGpx(w io.Writer) (err error) {
@@ -87,7 +67,7 @@ func (index *TimeIndex) ExportGpx(w io.Writer) (err error) {
 
 	for _, timeItem := range index.ts {
 		for _, item := range timeItem.Items {
-			gr := item.(GeographicRecord)
+			gr := item.(*GeographicRecord)
 
 			if gr.HasGeographic == true {
 				tpb := tsb.TrackPoint()

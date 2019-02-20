@@ -19,7 +19,7 @@ func TestJpegImageFileProcessor(t *testing.T) {
 		t.Fatalf("Exactly one index entry wasn't found: %v", index.ts)
 	}
 
-	actualFilepath := index.ts[0].Items[0].(GeographicRecord).Filepath
+	actualFilepath := index.ts[0].Items[0].(*GeographicRecord).Filepath
 	if actualFilepath != filepath {
 		t.Fatalf("FIle-path of index entry is not correct: [%s]", actualFilepath)
 	}

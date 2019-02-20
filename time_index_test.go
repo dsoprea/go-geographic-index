@@ -111,7 +111,7 @@ func ExampleIndex_Add() {
 
 	for _, te := range index.Series() {
 		item := te.Items[0]
-		gr := item.(GeographicRecord)
+		gr := item.(*GeographicRecord)
 
 		timestampPhrase, err := te.Time.MarshalText()
 		log.PanicIf(err)
