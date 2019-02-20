@@ -12,7 +12,7 @@ var (
 	dataLogger = log.NewLogger("geoindex.data_processors")
 )
 
-func GpxDataFileProcessor(index *TimeIndex, filepath string) (err error) {
+func GpxDataFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -30,7 +30,7 @@ func GpxDataFileProcessor(index *TimeIndex, filepath string) (err error) {
 			return nil
 		}
 
-		index.Add(
+		gr := NewGeographicRecord(
 			SourceGeographicGpx,
 			filepath,
 			tp.Time,
@@ -38,6 +38,16 @@ func GpxDataFileProcessor(index *TimeIndex, filepath string) (err error) {
 			tp.LatitudeDecimal,
 			tp.LongitudeDecimal,
 			nil)
+
+		if ti != nil {
+			err := ti.AddWithRecord(gr)
+			log.PanicIf(err)
+		}
+
+		if gi != nil {
+			err := gi.AddWithRecord(gr)
+			log.PanicIf(err)
+		}
 
 		return nil
 	}

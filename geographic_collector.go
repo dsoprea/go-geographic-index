@@ -30,16 +30,21 @@ var (
 
 type GeographicCollector struct {
 	processors map[string]FileProcessorFn
-	index      *TimeIndex
+	ti         *TimeIndex
+	gi         *GeographicIndex
 }
 
 // TODO(dustin): !! Convert to an interface and implement a Name() method.
-type FileProcessorFn func(index *TimeIndex, filepath string) (err error)
+type FileProcessorFn func(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error)
 
-func NewGeographicCollector(index *TimeIndex) (gc *GeographicCollector) {
+// NewGeographicCollector takes both indices and populates them as files are
+// processed. Either of them can be `nil` and, if that is the case, that index
+// will not be utilized.
+func NewGeographicCollector(ti *TimeIndex, gi *GeographicIndex) (gc *GeographicCollector) {
 	return &GeographicCollector{
 		processors: make(map[string]FileProcessorFn),
-		index:      index,
+		ti:         ti,
+		gi:         gi,
 	}
 }
 
@@ -125,7 +130,7 @@ FilesRead:
 					log.Panicf("processor expected but not found (should never happen)")
 				}
 
-				err := fp(gc.index, vf.Filepath)
+				err := fp(gc.ti, gc.gi, vf.Filepath)
 				log.PanicIf(err)
 			}
 		}

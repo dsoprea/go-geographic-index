@@ -45,7 +45,7 @@ func getFirstExifTagStringValue(rootIfd *exif.Ifd, tagName string) (value string
 	return value, nil
 }
 
-func JpegImageFileProcessor(index *TimeIndex, filepath string) (err error) {
+func JpegImageFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -130,7 +130,7 @@ func JpegImageFileProcessor(index *TimeIndex, filepath string) (err error) {
 		CameraModel: cameraModel,
 	}
 
-	index.Add(
+	gr := NewGeographicRecord(
 		SourceImageJpeg,
 		filepath,
 		timestamp,
@@ -138,6 +138,16 @@ func JpegImageFileProcessor(index *TimeIndex, filepath string) (err error) {
 		latitude,
 		longitude,
 		im)
+
+	if ti != nil {
+		err := ti.AddWithRecord(gr)
+		log.PanicIf(err)
+	}
+
+	if gi != nil {
+		err := gi.AddWithRecord(gr)
+		log.PanicIf(err)
+	}
 
 	return nil
 }

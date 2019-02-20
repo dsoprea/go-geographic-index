@@ -12,7 +12,7 @@ import (
 
 func TestIndex_ExportGpx(t *testing.T) {
 	index := NewTimeIndex()
-	gc := NewGeographicCollector(index)
+	gc := NewGeographicCollector(index, nil)
 
 	err := RegisterImageFileProcessors(gc)
 	log.PanicIf(err)
@@ -25,7 +25,7 @@ func TestIndex_ExportGpx(t *testing.T) {
 
 	buffer := new(bytes.Buffer)
 
-	err = gc.index.ExportGpx(buffer)
+	err = gc.ti.ExportGpx(buffer)
 	log.PanicIf(err)
 
 	expected := `<?xml version="1.0" encoding="UTF-8"?>
@@ -57,7 +57,7 @@ func TestIndex_ExportGpx(t *testing.T) {
 
 func ExampleIndex_ExportGpx() {
 	index := NewTimeIndex()
-	gc := NewGeographicCollector(index)
+	gc := NewGeographicCollector(index, nil)
 
 	err := RegisterImageFileProcessors(gc)
 	log.PanicIf(err)
@@ -70,7 +70,7 @@ func ExampleIndex_ExportGpx() {
 
 	buffer := new(bytes.Buffer)
 
-	err = gc.index.ExportGpx(buffer)
+	err = gc.ti.ExportGpx(buffer)
 	log.PanicIf(err)
 
 	output := buffer.String()

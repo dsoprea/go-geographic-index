@@ -12,7 +12,7 @@ func TestJpegImageFileProcessor(t *testing.T) {
 
 	filepath := path.Join(testAssetsPath, "gps.jpg")
 
-	err := JpegImageFileProcessor(index, filepath)
+	err := JpegImageFileProcessor(index, nil, filepath)
 	log.PanicIf(err)
 
 	if len(index.ts) != 1 {
@@ -27,7 +27,7 @@ func TestJpegImageFileProcessor(t *testing.T) {
 
 func TestRegisterImageFileProcessors(t *testing.T) {
 	index := NewTimeIndex()
-	gc := NewGeographicCollector(index)
+	gc := NewGeographicCollector(index, nil)
 
 	err := RegisterImageFileProcessors(gc)
 	log.PanicIf(err)
