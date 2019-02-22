@@ -71,6 +71,30 @@ func (gc *GeographicCollector) AddFileProcessor(extension string, processor File
 	return nil
 }
 
+func (gc *GeographicCollector) ReadFromFilepath(filepath string) (err error) {
+	defer func() {
+		if state := recover(); state != nil {
+			err = log.Wrap(state.(error))
+		}
+	}()
+
+	extension := path.Ext(filepath)
+	extension = strings.ToLower(extension)
+
+	fp, found := gc.processors[extension]
+
+	// Should never happen because the predicate above will already
+	// ignore anything that doesn't have a processor.
+	if found == false {
+		log.Panicf("processor expected but not found (should never happen)")
+	}
+
+	err = fp(gc.ti, gc.gi, filepath)
+	log.PanicIf(err)
+
+	return nil
+}
+
 func (gc *GeographicCollector) ReadFromPath(rootPath string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
@@ -119,18 +143,7 @@ FilesRead:
 			}
 
 			if vf.Info.IsDir() == false {
-				extension := path.Ext(vf.Filepath)
-				extension = strings.ToLower(extension)
-
-				fp, found := gc.processors[extension]
-
-				// Should never happen because the predicate above will already
-				// ignore anything that doesn't have a processor.
-				if found == false {
-					log.Panicf("processor expected but not found (should never happen)")
-				}
-
-				err := fp(gc.ti, gc.gi, vf.Filepath)
+				err := gc.ReadFromFilepath(vf.Filepath)
 				log.PanicIf(err)
 			}
 		}

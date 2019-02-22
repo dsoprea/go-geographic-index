@@ -24,6 +24,8 @@ func GpxDataFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string) (
 
 	defer f.Close()
 
+	counter := 0
+
 	tpc := func(tp *gpxcommon.TrackPoint) (err error) {
 		if tp.Time.IsZero() == true {
 			dataLogger.Warningf(nil, "Skipping zero-time record: [%s] %s", filepath, tp)
@@ -49,11 +51,15 @@ func GpxDataFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string) (
 			log.PanicIf(err)
 		}
 
+		counter++
+
 		return nil
 	}
 
 	err = gpxreader.EnumerateTrackPoints(f, tpc)
 	log.PanicIf(err)
+
+	dataLogger.Infof(nil, "Read (%d) records from [%s].", counter, filepath)
 
 	return nil
 }
