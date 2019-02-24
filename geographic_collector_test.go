@@ -206,7 +206,7 @@ func ExampleGeographicCollector_ReadFromPath_WithTimeAndGeographicIndices() {
 	// Output:
 	// Search by time:
 	//
-	// GeographicRecord<F=[/home/local/MAGICLEAP/doprea/development/gopath/src/github.com/dsoprea/go-geographic-index/test/asset/data.gpx] LAT=[47.644548] LON=[-122.326897] CELL=[6093393264082127749]>
+	// GeographicRecord<F=[data.gpx] LAT=[47.644548] LON=[-122.326897] CELL=[6093393264082127749]>
 	//
 	// Search by coordinate:
 	//

@@ -2,6 +2,7 @@ package geoindex
 
 import (
 	"fmt"
+	"path"
 	"time"
 
 	"github.com/randomingenuity/go-utility/geographic"
@@ -23,7 +24,7 @@ type GeographicRecord struct {
 }
 
 func (gr GeographicRecord) String() string {
-	return fmt.Sprintf("GeographicRecord<F=[%s] LAT=[%.6f] LON=[%.6f] CELL=[%d]>", gr.Filepath, gr.Latitude, gr.Longitude, gr.S2CellId)
+	return fmt.Sprintf("GeographicRecord<F=[%s] LAT=[%.6f] LON=[%.6f] CELL=[%d]>", path.Base(gr.Filepath), gr.Latitude, gr.Longitude, gr.S2CellId)
 }
 
 func NewGeographicRecord(sourceName string, filepath string, timestamp time.Time, hasGeographic bool, latitude float64, longitude float64, metadata interface{}) (gr *GeographicRecord) {
