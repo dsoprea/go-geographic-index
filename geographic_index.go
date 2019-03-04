@@ -92,7 +92,7 @@ func (gi *GeographicIndex) GetWithCoordinates(latitude, longitude float64, lowes
 		}
 	}()
 
-	cellIdRaw := rigeo.S2CellIdFromCoordinates(latitude, longitude)
+	cellIdRaw := rigeo.S2CellFromCoordinates(latitude, longitude)
 	cellId := s2.CellID(cellIdRaw)
 
 	// Starting at finest resolution, iteratively search cells until we find

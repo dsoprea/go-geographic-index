@@ -44,7 +44,8 @@ func NewGeographicRecord(sourceName string, filepath string, timestamp time.Time
 		gr.Latitude = latitude
 		gr.Longitude = longitude
 
-		gr.S2CellId = rigeo.S2CellIdFromCoordinates(latitude, longitude)
+		cellIdRaw := rigeo.S2CellFromCoordinates(latitude, longitude)
+		gr.S2CellId = uint64(cellIdRaw)
 	}
 
 	return gr
