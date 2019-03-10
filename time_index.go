@@ -13,7 +13,7 @@ type TimeIndex struct {
 	ts timeindex.TimeSlice
 }
 
-func NewTimeIndex() (gi *TimeIndex) {
+func NewTimeIndex() (ti *TimeIndex) {
 	return &TimeIndex{
 		ts: make(timeindex.TimeSlice, 0),
 	}
