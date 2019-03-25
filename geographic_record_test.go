@@ -22,7 +22,7 @@ func TestGeographicRecord_Encode(t *testing.T) {
         "source_name":    "source-name",
         "metadata":       make(map[string]interface{}),
         "comments":       make([]string, 0),
-        "relationships":  make(map[string][]*GeographicRecord),
+        "relationships":  make(map[string][]map[string]interface{}),
     }
 
     actual := gr1.Encode()
