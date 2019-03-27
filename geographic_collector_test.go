@@ -15,7 +15,7 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc)
+	err := RegisterImageFileProcessors(gc, 0)
 	log.PanicIf(err)
 
 	err = RegisterDataFileProcessors(gc)
@@ -34,7 +34,7 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 		"2009-10-17 18:37:26 +0000 UTC",
 		"2009-10-17 18:37:31 +0000 UTC",
 		"2009-10-17 18:37:34 +0000 UTC",
-		"2018-06-09 01:07:30 +0000 UTC",
+		"2018-04-28 21:23:12 +0000 UTC",
 		"2018-11-30 13:01:49 +0000 UTC",
 	}
 
@@ -61,7 +61,7 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 		"[2009-10-17 18:37:26 +0000 UTC] [549014E3B65F8B85]",
 		"[2009-10-17 18:37:31 +0000 UTC] [549014E3B65F8B85]",
 		"[2009-10-17 18:37:34 +0000 UTC] [549014E3B65F8B85]",
-		"[2018-06-09 01:07:30 +0000 UTC] [88D8D8FFD5C4DEAD]",
+		"[2018-04-28 21:23:12 +0000 UTC] [88D8D8FFD5C4DEAD]",
 		"[2018-11-30 13:01:49 +0000 UTC] [0]",
 	}
 
@@ -132,7 +132,7 @@ func ExampleGeographicCollector_ReadFromPath() {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc)
+	err := RegisterImageFileProcessors(gc, 0)
 	log.PanicIf(err)
 
 	err = RegisterDataFileProcessors(gc)
@@ -155,7 +155,7 @@ func ExampleGeographicCollector_ReadFromPath() {
 	// [2009-10-17T18:37:26Z] [data.gpx] [true] (47.6445480000) (-122.3268970000)
 	// [2009-10-17T18:37:31Z] [data.gpx] [true] (47.6445480000) (-122.3268970000)
 	// [2009-10-17T18:37:34Z] [data.gpx] [true] (47.6445480000) (-122.3268970000)
-	// [2018-06-09T01:07:30Z] [gps.jpg] [true] (26.5866666667) (-80.0536111111)
+	// [2018-04-28T21:23:12Z] [gps.jpg] [true] (26.5866666667) (-80.0536111111)
 	// [2018-11-30T13:01:49Z] [IMG_20181130_1301493.jpg] [false] (0.0000000000) (0.0000000000)
 }
 

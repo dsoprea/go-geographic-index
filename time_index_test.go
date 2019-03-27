@@ -14,7 +14,7 @@ func TestIndex_ExportGpx(t *testing.T) {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc)
+	err := RegisterImageFileProcessors(gc, 0)
 	log.PanicIf(err)
 
 	err = RegisterDataFileProcessors(gc)
@@ -42,7 +42,7 @@ func TestIndex_ExportGpx(t *testing.T) {
         <time>2009-10-17T18:37:34+0000</time>
       </trkpt>
       <trkpt lat="26.586666666666666" lon="-80.05361111111111">
-        <time>2018-06-09T01:07:30+0000</time>
+        <time>2018-04-28T21:23:12+0000</time>
       </trkpt>
     </trkseg>
   </trk>
@@ -59,7 +59,7 @@ func ExampleIndex_ExportGpx() {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc)
+	err := RegisterImageFileProcessors(gc, 0)
 	log.PanicIf(err)
 
 	err = RegisterDataFileProcessors(gc)
@@ -91,7 +91,7 @@ func ExampleIndex_ExportGpx() {
 	//         <time>2009-10-17T18:37:34+0000</time>
 	//       </trkpt>
 	//       <trkpt lat="26.586666666666666" lon="-80.05361111111111">
-	//         <time>2018-06-09T01:07:30+0000</time>
+	//         <time>2018-04-28T21:23:12+0000</time>
 	//       </trkpt>
 	//     </trkseg>
 	//   </trk>
