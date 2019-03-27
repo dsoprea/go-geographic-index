@@ -12,7 +12,18 @@ var (
 	dataLogger = log.NewLogger("geoindex.data_processors")
 )
 
-func GpxDataFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error) {
+type GpxDataFileProcessor struct {
+}
+
+func NewGpxDataFileProcessor() *GpxDataFileProcessor {
+	return new(GpxDataFileProcessor)
+}
+
+func (gdfp *GpxDataFileProcessor) Name() string {
+	return "GpxDataFileProcessor"
+}
+
+func (gdfp *GpxDataFileProcessor) Process(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -71,7 +82,9 @@ func RegisterDataFileProcessors(gc *GeographicCollector) (err error) {
 		}
 	}()
 
-	err = gc.AddFileProcessor(".gpx", GpxDataFileProcessor)
+	gdfp := NewGpxDataFileProcessor()
+
+	err = gc.AddFileProcessor(".gpx", gdfp)
 	log.PanicIf(err)
 
 	return nil

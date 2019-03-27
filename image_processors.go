@@ -13,7 +13,18 @@ var (
 	ipLogger = log.NewLogger("geoindex.image_processors")
 )
 
-func getFirstExifTagStringValue(rootIfd *exif.Ifd, tagName string) (value string, err error) {
+type JpegImageFileProcessor struct {
+}
+
+func NewJpegImageFileProcessor() *JpegImageFileProcessor {
+	return new(JpegImageFileProcessor)
+}
+
+func (jifp *JpegImageFileProcessor) Name() string {
+	return "JpegImageFileProcessor"
+}
+
+func (jifp *JpegImageFileProcessor) getFirstExifTagStringValue(rootIfd *exif.Ifd, tagName string) (value string, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -45,7 +56,7 @@ func getFirstExifTagStringValue(rootIfd *exif.Ifd, tagName string) (value string
 	return value, nil
 }
 
-func JpegImageFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error) {
+func (jifp *JpegImageFileProcessor) Process(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -87,14 +98,14 @@ func JpegImageFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string)
 	var longitude float64
 
 	if hasGps == true {
-		gi, err := gpsIfd.GpsInfo()
+		gpsInfo, err := gpsIfd.GpsInfo()
 
 		if err == nil {
 			// Yes. We have geographic data.
 
 			hasGeographicData = true
-			latitude = gi.Latitude.Decimal()
-			longitude = gi.Longitude.Decimal()
+			latitude = gpsInfo.Latitude.Decimal()
+			longitude = gpsInfo.Longitude.Decimal()
 		}
 	}
 
@@ -102,7 +113,7 @@ func JpegImageFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string)
 
 	tagName := "DateTime"
 
-	timestampPhrase, err := getFirstExifTagStringValue(rootIfd, tagName)
+	timestampPhrase, err := jifp.getFirstExifTagStringValue(rootIfd, tagName)
 	log.PanicIf(err)
 
 	var timestamp time.Time
@@ -123,7 +134,7 @@ func JpegImageFileProcessor(ti *TimeIndex, gi *GeographicIndex, filepath string)
 	// IFD-PATH=[IFD] ID=(0x0110) NAME=[Model] COUNT=(22) TYPE=[ASCII] VALUE=[Canon EOS 5D Mark III]
 	tagName = "Model"
 
-	cameraModel, err := getFirstExifTagStringValue(rootIfd, tagName)
+	cameraModel, err := jifp.getFirstExifTagStringValue(rootIfd, tagName)
 	log.PanicIf(err)
 
 	im := ImageMetadata{
@@ -159,10 +170,12 @@ func RegisterImageFileProcessors(gc *GeographicCollector) (err error) {
 		}
 	}()
 
-	err = gc.AddFileProcessor(".jpg", JpegImageFileProcessor)
+	jifp := NewJpegImageFileProcessor()
+
+	err = gc.AddFileProcessor(".jpg", jifp)
 	log.PanicIf(err)
 
-	err = gc.AddFileProcessor(".jpeg", JpegImageFileProcessor)
+	err = gc.AddFileProcessor(".jpeg", jifp)
 	log.PanicIf(err)
 
 	return nil

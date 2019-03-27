@@ -29,20 +29,22 @@ var (
 // otherwise dramatically skew the grouping algorithm.
 
 type GeographicCollector struct {
-	processors map[string]FileProcessorFn
+	processors map[string]FileProcessor
 	ti         *TimeIndex
 	gi         *GeographicIndex
 }
 
-// TODO(dustin): !! Convert to an interface and implement a Name() method.
-type FileProcessorFn func(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error)
+type FileProcessor interface {
+	Name() string
+	Process(ti *TimeIndex, gi *GeographicIndex, filepath string) (err error)
+}
 
 // NewGeographicCollector takes both indices and populates them as files are
 // processed. Either of them can be `nil` and, if that is the case, that index
 // will not be utilized.
 func NewGeographicCollector(ti *TimeIndex, gi *GeographicIndex) (gc *GeographicCollector) {
 	return &GeographicCollector{
-		processors: make(map[string]FileProcessorFn),
+		processors: make(map[string]FileProcessor),
 		ti:         ti,
 		gi:         gi,
 	}
@@ -52,7 +54,7 @@ func NewGeographicCollector(ti *TimeIndex, gi *GeographicIndex) (gc *GeographicC
 // extension is case-insensitive and must include the initial period. This can
 // be called more than once with one processor but not more than once for an
 // extension.
-func (gc *GeographicCollector) AddFileProcessor(extension string, processor FileProcessorFn) (err error) {
+func (gc *GeographicCollector) AddFileProcessor(extension string, processor FileProcessor) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -89,7 +91,7 @@ func (gc *GeographicCollector) ReadFromFilepath(filepath string) (err error) {
 		log.Panicf("processor expected but not found (should never happen)")
 	}
 
-	err = fp(gc.ti, gc.gi, filepath)
+	err = fp.Process(gc.ti, gc.gi, filepath)
 	log.PanicIf(err)
 
 	return nil

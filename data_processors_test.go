@@ -13,7 +13,9 @@ func TestGpxDataFileProcessor_SkipNoTimeRecords(t *testing.T) {
 
 	filepath := path.Join(testAssetsPath, "no_times.gpx")
 
-	err := GpxDataFileProcessor(index, nil, filepath)
+	gdfp := NewGpxDataFileProcessor()
+
+	err := gdfp.Process(index, nil, filepath)
 	log.PanicIf(err)
 
 	if len(index.ts) > 0 {
@@ -26,7 +28,9 @@ func TestGpxDataFileProcessor_WithTimeRecords(t *testing.T) {
 
 	filepath := path.Join(testAssetsPath, "data.gpx")
 
-	err := GpxDataFileProcessor(index, nil, filepath)
+	gdfp := NewGpxDataFileProcessor()
+
+	err := gdfp.Process(index, nil, filepath)
 	log.PanicIf(err)
 
 	actual := make([]string, 0)
