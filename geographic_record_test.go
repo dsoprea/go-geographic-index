@@ -13,16 +13,15 @@ func TestGeographicRecord_Encode(t *testing.T) {
     gr1 := NewGeographicRecord("source-name", "file.name1", now, true, 12.34, 34.56, nil)
 
     expected := map[string]interface{}{
-        "timestamp":      now,
-        "filepath":       "file.name1",
-        "has_geographic": true,
-        "latitude":       12.34,
-        "longitude":      34.56,
-        "s2_cell_id":     uint64(1610222620212933235),
-        "source_name":    "source-name",
-        "metadata":       make(map[string]interface{}),
-        "comments":       make([]string, 0),
-        "relationships":  make(map[string][]map[string]interface{}),
+        "timestamp":     now,
+        "filepath":      "file.name1",
+        "latitude":      12.34,
+        "longitude":     34.56,
+        "s2_token":      "1658a8f117173273",
+        "source_name":   "source-name",
+        "metadata":      make(map[string]interface{}),
+        "comments":      make([]string, 0),
+        "relationships": make(map[string][]map[string]interface{}),
     }
 
     actual := gr1.Encode()

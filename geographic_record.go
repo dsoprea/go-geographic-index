@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/golang/geo/s2"
+
 	"github.com/randomingenuity/go-utility/geographic"
 )
 
@@ -87,18 +89,22 @@ func (gr *GeographicRecord) Encode() map[string]interface{} {
 		encodedRelationships[type_] = encodedGrList
 	}
 
-	return map[string]interface{}{
-		"timestamp":      gr.Timestamp,
-		"filepath":       gr.Filepath,
-		"has_geographic": gr.HasGeographic,
-		"latitude":       gr.Latitude,
-		"longitude":      gr.Longitude,
-		"s2_cell_id":     gr.S2CellId,
-		"source_name":    gr.SourceName,
-		"metadata":       gr.Metadata,
-		"comments":       gr.Comments(),
-		"relationships":  encodedRelationships,
+	encoded := map[string]interface{}{
+		"timestamp":     gr.Timestamp,
+		"filepath":      gr.Filepath,
+		"source_name":   gr.SourceName,
+		"metadata":      gr.Metadata,
+		"comments":      gr.Comments(),
+		"relationships": encodedRelationships,
 	}
+
+	if gr.HasGeographic == true {
+		encoded["latitude"] = gr.Latitude
+		encoded["longitude"] = gr.Longitude
+		encoded["s2_token"] = s2.CellID(gr.S2CellId).ToToken()
+	}
+
+	return encoded
 }
 
 func (gr *GeographicRecord) Comments() []string {
