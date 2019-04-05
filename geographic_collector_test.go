@@ -15,7 +15,7 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc, 0)
+	err := RegisterImageFileProcessors(gc, 0, nil)
 	log.PanicIf(err)
 
 	err = RegisterDataFileProcessors(gc)
@@ -132,7 +132,7 @@ func ExampleGeographicCollector_ReadFromPath() {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc, 0)
+	err := RegisterImageFileProcessors(gc, 0, nil)
 	log.PanicIf(err)
 
 	err = RegisterDataFileProcessors(gc)

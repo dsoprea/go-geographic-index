@@ -28,7 +28,7 @@ Excerpt from [GeographicCollector.ReadFromPath](https://godoc.org/github.com/dso
 index := NewTimeIndex()
 gc := NewGeographicCollector(index)
 
-err := RegisterImageFileProcessors(gc)
+err := RegisterImageFileProcessors(gc, 0, nil)
 log.PanicIf(err)
 
 err = RegisterDataFileProcessors(gc)
@@ -60,7 +60,7 @@ Excerpt from [Index.ExportGpx](https://godoc.org/github.com/dsoprea/go-geographi
 index := NewTimeIndex()
 gc := NewGeographicCollector(index)
 
-err := RegisterImageFileProcessors(gc)
+err := RegisterImageFileProcessors(gc, 0, nil)
 log.PanicIf(err)
 
 err = RegisterDataFileProcessors(gc)

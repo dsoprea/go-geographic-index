@@ -15,15 +15,22 @@ var (
 )
 
 type JpegImageFileProcessor struct {
-	timestampSkew time.Duration
+	timestampSkew     time.Duration
+	cameraModelFilter map[string]struct{}
 }
 
 func NewJpegImageFileProcessor() *JpegImageFileProcessor {
-	return new(JpegImageFileProcessor)
+	return &JpegImageFileProcessor{
+		cameraModelFilter: make(map[string]struct{}),
+	}
 }
 
 func (jifp *JpegImageFileProcessor) SetImageTimestampSkew(timestampSkew time.Duration) {
 	jifp.timestampSkew = timestampSkew
+}
+
+func (jifp *JpegImageFileProcessor) AddCameraModelToFilter(cameraModel string) {
+	jifp.cameraModelFilter[cameraModel] = struct{}{}
 }
 
 func (jifp *JpegImageFileProcessor) Name() string {
@@ -105,13 +112,16 @@ func (jifp *JpegImageFileProcessor) Process(ti *TimeIndex, gi *GeographicIndex, 
 
 	if hasGps == true {
 		gpsInfo, err := gpsIfd.GpsInfo()
-
 		if err == nil {
 			// Yes. We have geographic data.
 
 			hasGeographicData = true
 			latitude = gpsInfo.Latitude.Decimal()
 			longitude = gpsInfo.Longitude.Decimal()
+		} else {
+			if log.Is(err, exif.ErrNoGpsTags) == false {
+				log.Panic(err)
+			}
 		}
 	}
 
@@ -154,6 +164,13 @@ func (jifp *JpegImageFileProcessor) Process(ti *TimeIndex, gi *GeographicIndex, 
 	cameraModel, err := jifp.getFirstExifTagStringValue(rootIfd, tagName)
 	log.PanicIf(err)
 
+	// Check the camera-model filter.
+	if len(jifp.cameraModelFilter) > 0 {
+		if _, found := jifp.cameraModelFilter[cameraModel]; found == false {
+			return nil
+		}
+	}
+
 	im := ImageMetadata{
 		CameraModel: cameraModel,
 	}
@@ -183,7 +200,7 @@ func (jifp *JpegImageFileProcessor) Process(ti *TimeIndex, gi *GeographicIndex, 
 // RegisterImageFileProcessors registers the processors for the image types
 // that we know how to process. `imageTimestampSkew` is necessor to shift the
 // timestamps of the EXIF times we read, which always appear as UTC.
-func RegisterImageFileProcessors(gc *GeographicCollector, imageTimestampSkew time.Duration) (err error) {
+func RegisterImageFileProcessors(gc *GeographicCollector, imageTimestampSkew time.Duration, cameraModels []string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -192,6 +209,12 @@ func RegisterImageFileProcessors(gc *GeographicCollector, imageTimestampSkew tim
 
 	jifp := NewJpegImageFileProcessor()
 	jifp.SetImageTimestampSkew(imageTimestampSkew)
+
+	if cameraModels != nil {
+		for _, cameraModel := range cameraModels {
+			jifp.AddCameraModelToFilter(cameraModel)
+		}
+	}
 
 	err = gc.AddFileProcessor(".jpg", jifp)
 	log.PanicIf(err)

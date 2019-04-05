@@ -31,6 +31,6 @@ func TestRegisterImageFileProcessors(t *testing.T) {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc, 0)
+	err := RegisterImageFileProcessors(gc, 0, nil)
 	log.PanicIf(err)
 }

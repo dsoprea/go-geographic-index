@@ -14,7 +14,7 @@ func TestIndex_ExportGpx(t *testing.T) {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc, 0)
+	err := RegisterImageFileProcessors(gc, 0, nil)
 	log.PanicIf(err)
 
 	err = RegisterDataFileProcessors(gc)
@@ -59,7 +59,7 @@ func ExampleIndex_ExportGpx() {
 	index := NewTimeIndex()
 	gc := NewGeographicCollector(index, nil)
 
-	err := RegisterImageFileProcessors(gc, 0)
+	err := RegisterImageFileProcessors(gc, 0, nil)
 	log.PanicIf(err)
 
 	err = RegisterDataFileProcessors(gc)
