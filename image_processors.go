@@ -125,33 +125,73 @@ func (jifp *JpegImageFileProcessor) Process(ti *TimeIndex, gi *GeographicIndex, 
 		}
 	}
 
-	// Get the picture timestamp as stored in the EXIF.
+	// Get the picture timestamp as stored in the EXIF. We try several
+	// different tags.
 
 	var timestamp time.Time
 
 	exifIfd, err := rootIfd.ChildWithIfdPath(exif.IfdPathStandardExif)
+	if err != nil && log.Is(err, exif.ErrTagNotFound) == false {
+		log.Panic(err)
+	}
+
 	if err == nil {
-		// We use this because it's the time that the image was captured versus the
-		// time it was written to a file ("DateTimeDigitized"). Also, we have seen
-		// "DateTime" being occasionally modified for a local timezone, but it's
-		// rare and inconsistent. All things being equal, let's use something that
-		// behaves consistently that we can account for.
+		// We prefer this because it's the time that the image was captured
+		// versus the time it was written to a file ("DateTimeDigitized"). Also,
+		// we have seen "DateTime" being occasionally modified for a local
+		// timezone, but it's rare and inconsistent. All things being equal,
+		// let's use something that behaves consistently that we can account
+		// for.
 		tagName := "DateTimeOriginal"
 
 		timestampPhrase, err := jifp.getFirstExifTagStringValue(exifIfd, tagName)
 		log.PanicIf(err)
 
 		if timestampPhrase == "" {
-			ipLogger.Warningf(nil, "Image has an empty timestamp: [%s]", filepath)
-			return nil
+			ipLogger.Warningf(nil, "Image has an empty timestamp for [%s]: [%s]", tagName, filepath)
 		} else {
 			timestamp, err = exif.ParseExifFullTimestamp(timestampPhrase)
 			if err != nil {
-				ipLogger.Warningf(nil, "Image's timestamp is unparseable: [%s] [%s]", filepath, timestampPhrase)
-				return nil
+				ipLogger.Warningf(nil, "Image's [%s] timestamp is unparseable: [%s] [%s]", tagName, filepath, timestampPhrase)
+			} else {
+				timestamp = timestamp.Add(jifp.timestampSkew)
 			}
+		}
 
-			timestamp = timestamp.Add(jifp.timestampSkew)
+		if timestamp.IsZero() == true {
+			tagName := "DateTimeDigitized"
+
+			timestampPhrase, err := jifp.getFirstExifTagStringValue(exifIfd, tagName)
+			log.PanicIf(err)
+
+			if timestampPhrase == "" {
+				ipLogger.Warningf(nil, "Image has an empty timestamp for [%s]: [%s]", tagName, filepath)
+			} else {
+				timestamp, err = exif.ParseExifFullTimestamp(timestampPhrase)
+				if err != nil {
+					ipLogger.Warningf(nil, "Image's [%s] timestamp is unparseable: [%s] [%s]", tagName, filepath, timestampPhrase)
+				} else {
+					timestamp = timestamp.Add(jifp.timestampSkew)
+				}
+			}
+		}
+	}
+
+	if timestamp.IsZero() == true {
+		tagName := "DateTime"
+
+		timestampPhrase, err := jifp.getFirstExifTagStringValue(rootIfd, tagName)
+		log.PanicIf(err)
+
+		if timestampPhrase == "" {
+			ipLogger.Warningf(nil, "Image has an empty timestamp for [%s]: [%s]", tagName, filepath)
+		} else {
+			timestamp, err = exif.ParseExifFullTimestamp(timestampPhrase)
+			if err != nil {
+				ipLogger.Warningf(nil, "Image's [%s] timestamp is unparseable: [%s] [%s]", tagName, filepath, timestampPhrase)
+			} else {
+				timestamp = timestamp.Add(jifp.timestampSkew)
+			}
 		}
 	}
 

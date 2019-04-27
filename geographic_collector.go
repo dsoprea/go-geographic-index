@@ -1,7 +1,6 @@
 package geoindex
 
 import (
-	"os"
 	"path"
 	"strings"
 
@@ -97,21 +96,20 @@ func (gc *GeographicCollector) ReadFromFilepath(filepath string) (err error) {
 		}
 	}()
 
-	gc.filepathCollector = append(gc.filepathCollector, filepath)
-
-	if gc.noopMode == true {
-		return nil
-	}
-
 	extension := path.Ext(filepath)
 	extension = strings.ToLower(extension)
 
 	fp, found := gc.processors[extension]
 
-	// Should never happen because the predicate above will already
-	// ignore anything that doesn't have a processor.
+	// We don't have a processor for this type of file.
 	if found == false {
-		log.Panicf("processor expected but not found (should never happen)")
+		return nil
+	}
+
+	gc.filepathCollector = append(gc.filepathCollector, filepath)
+
+	if gc.noopMode == true {
+		return nil
 	}
 
 	err = fp.Process(gc.ti, gc.gi, filepath)
@@ -127,25 +125,7 @@ func (gc *GeographicCollector) ReadFromPath(rootPath string) (err error) {
 		}
 	}()
 
-	// Allow all directories and any file whose extension is associated with a
-	// processor.
-	filter := func(parent string, child os.FileInfo) (bool, error) {
-		if child.IsDir() == true {
-			return true, nil
-		}
-
-		extension := path.Ext(child.Name())
-		extension = strings.ToLower(extension)
-
-		_, found := gc.processors[extension]
-		if found == true {
-			return true, nil
-		}
-
-		return false, nil
-	}
-
-	filesC, errC := rifs.ListFiles(rootPath, filter)
+	filesC, errC := rifs.ListFiles(rootPath, nil)
 
 FilesRead:
 
