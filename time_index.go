@@ -19,6 +19,12 @@ func NewTimeIndex() (ti *TimeIndex) {
 	}
 }
 
+func NewTimeIndexFromSlice(ts timeindex.TimeSlice) (ti *TimeIndex) {
+	return &TimeIndex{
+		ts: ts,
+	}
+}
+
 func (index *TimeIndex) Series() timeindex.TimeSlice {
 	return index.ts
 }
