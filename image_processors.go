@@ -87,7 +87,7 @@ func (jifp *JpegImageFileProcessor) Process(ti *TimeIndex, gi *GeographicIndex, 
 	rootIfd, _, err := sl.Exif()
 	if err != nil {
 		// Skip if it doesn't have EXIF data.
-		if log.Is(err, jpegstructure.ErrNoExif) == true {
+		if log.Is(err, exif.ErrNoExif) == true {
 			return nil
 		}
 
