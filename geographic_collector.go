@@ -29,9 +29,13 @@ var (
 // otherwise dramatically skew the grouping algorithm.
 
 type GeographicCollector struct {
-	processors map[string]FileProcessor
-	ti         *TimeIndex
-	gi         *GeographicIndex
+	processors        map[string]FileProcessor
+	ti                *TimeIndex
+	gi                *GeographicIndex
+	filepathCollector []string
+
+	// noopMode indicates whether we'll skip or actually process any files.
+	noopMode bool
 }
 
 type FileProcessor interface {
@@ -43,11 +47,24 @@ type FileProcessor interface {
 // processed. Either of them can be `nil` and, if that is the case, that index
 // will not be utilized.
 func NewGeographicCollector(ti *TimeIndex, gi *GeographicIndex) (gc *GeographicCollector) {
+	filepathCollector := make([]string, 0)
+
 	return &GeographicCollector{
-		processors: make(map[string]FileProcessor),
-		ti:         ti,
-		gi:         gi,
+		processors:        make(map[string]FileProcessor),
+		ti:                ti,
+		gi:                gi,
+		filepathCollector: filepathCollector,
 	}
+}
+
+// SetNoopCollector indicats whether we will just collect file-paths
+func (gc *GeographicCollector) SetNoopFlag(flag bool) {
+	gc.noopMode = flag
+}
+
+// VisitedFilepaths returns the list of file-paths that we encountered.
+func (gc *GeographicCollector) VisitedFilepaths() []string {
+	return gc.filepathCollector
 }
 
 // AddFileProcessor registers a given processor for a given extension. The
@@ -79,6 +96,12 @@ func (gc *GeographicCollector) ReadFromFilepath(filepath string) (err error) {
 			err = log.Wrap(state.(error))
 		}
 	}()
+
+	gc.filepathCollector = append(gc.filepathCollector, filepath)
+
+	if gc.noopMode == true {
+		return nil
+	}
 
 	extension := path.Ext(filepath)
 	extension = strings.ToLower(extension)
