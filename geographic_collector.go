@@ -14,27 +14,12 @@ var (
 
 // TODO(dustin): !! Rename this file and tests to "collector.go". There's nothing geographic-specific about this file.
 
-// TODO(dustin): Add a mechanism to filter out aberrations in geographic data:
-//
-// Given a sliding window of (n) records in a geographic series sorted by
-// timestamp, group by M number of right-side places on a hilbert position
-// where they are adjacent in the series and close enough in time. Groups
-// must be at least P members. For any two adjacent groups with at least one
-// ungrouped record between them where these ungrouped members are also within
-// a very close period of time to the rightmost member of the group on the left
-// side and the leftmost member of the group on the right side log and ignore.
-// This would help distill conflicing records that are present for some reason
-// (maybe a data recording glitch or pictures from someone else) that would
-// otherwise dramatically skew the grouping algorithm.
-
 type GeographicCollector struct {
 	processors        map[string]FileProcessor
 	ti                *TimeIndex
 	gi                *GeographicIndex
 	filepathCollector []string
-
-	// noopMode indicates whether we'll skip or actually process any files.
-	noopMode bool
+	visitedCount      int
 }
 
 type FileProcessor interface {
@@ -56,9 +41,8 @@ func NewGeographicCollector(ti *TimeIndex, gi *GeographicIndex) (gc *GeographicC
 	}
 }
 
-// SetNoopCollector indicats whether we will just collect file-paths
-func (gc *GeographicCollector) SetNoopFlag(flag bool) {
-	gc.noopMode = flag
+func (gc *GeographicCollector) VisitedCount() int {
+	return gc.visitedCount
 }
 
 // VisitedFilepaths returns the list of file-paths that we encountered.
@@ -108,9 +92,7 @@ func (gc *GeographicCollector) ReadFromFilepath(filepath string) (err error) {
 
 	gc.filepathCollector = append(gc.filepathCollector, filepath)
 
-	if gc.noopMode == true {
-		return nil
-	}
+	gc.visitedCount++
 
 	err = fp.Process(gc.ti, gc.gi, filepath)
 	log.PanicIf(err)
@@ -125,7 +107,7 @@ func (gc *GeographicCollector) ReadFromPath(rootPath string) (err error) {
 		}
 	}()
 
-	filesC, errC := rifs.ListFiles(rootPath, nil)
+	filesC, _, errC := rifs.ListFiles(rootPath, nil)
 
 FilesRead:
 

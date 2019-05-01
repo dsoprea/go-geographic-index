@@ -24,6 +24,11 @@ func TestGeographicCollector_ReadFromPath_Images(t *testing.T) {
 	err = gc.ReadFromPath(testAssetsPath)
 	log.PanicIf(err)
 
+	count := gc.VisitedCount()
+	if count != 4 {
+		t.Fatalf("visited count not correct: (%d)", count)
+	}
+
 	actualTimestamps := make([]string, 0)
 
 	for _, timeItem := range index.ts {

@@ -44,13 +44,12 @@ func (index *TimeIndex) Add(sourceName string, filepath string, timestamp time.T
 		}
 	}()
 
+	// TODO(dustin): Pass a `FileProcessor` instance rather than `sourceName`.
+
 	gr := NewGeographicRecord(sourceName, filepath, timestamp, hasGeographic, latitude, longitude, metadata)
 
 	err = index.AddWithRecord(gr)
 	log.PanicIf(err)
-
-	// TODO(dustin): !! Convert our file-processors to an interface, implement a Name() method, and then store that name (or the processor) with the data.
-	// TODO(dustin): !! Once we do the above, we can stop passing `sourceName` explicitly.
 
 	return nil
 }

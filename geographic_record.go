@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"time"
 
+	"encoding/gob"
+
 	"github.com/golang/geo/s2"
 
 	"github.com/randomingenuity/go-utility/geographic"
@@ -163,4 +165,8 @@ func NewGeographicRecord(sourceName string, filepath string, timestamp time.Time
 	}
 
 	return gr
+}
+
+func init() {
+	gob.Register(&GeographicRecord{})
 }
