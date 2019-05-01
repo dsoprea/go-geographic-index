@@ -219,3 +219,35 @@ func ExampleGeographicCollector_ReadFromPath_WithTimeAndGeographicIndices() {
 	// 2009-10-17 18:37:31 +0000 UTC (47.644548, -122.326897)
 	// 2009-10-17 18:37:34 +0000 UTC (47.644548, -122.326897)
 }
+
+func TestGeographicCollector_SetFileProcessedCallback(t *testing.T) {
+	index := NewTimeIndex()
+	gc := NewGeographicCollector(index, nil)
+
+	err := RegisterImageFileProcessors(gc, 0, nil)
+	log.PanicIf(err)
+
+	err = RegisterDataFileProcessors(gc)
+	log.PanicIf(err)
+
+	i := 0
+	cb := func(filepath string) (err error) {
+		i++
+
+		return nil
+	}
+
+	gc.SetFileProcessedCallback(cb)
+
+	err = gc.ReadFromPath(testAssetsPath)
+	log.PanicIf(err)
+
+	if i != 4 {
+		t.Fatalf("visited count not correct: (%d)", i)
+	}
+
+	count := gc.VisitedCount()
+	if count != i {
+		t.Fatalf("Callback count does not match the visit count: (%d) != (%d)", count, i)
+	}
+}

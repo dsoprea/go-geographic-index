@@ -14,12 +14,16 @@ var (
 
 // TODO(dustin): !! Rename this file and tests to "collector.go". There's nothing geographic-specific about this file.
 
+type FileProcessedFunc func(filepath string) (err error)
+
 type GeographicCollector struct {
 	processors        map[string]FileProcessor
 	ti                *TimeIndex
 	gi                *GeographicIndex
 	filepathCollector []string
 	visitedCount      int
+
+	fileProcessedCb FileProcessedFunc
 }
 
 type FileProcessor interface {
@@ -41,8 +45,16 @@ func NewGeographicCollector(ti *TimeIndex, gi *GeographicIndex) (gc *GeographicC
 	}
 }
 
+// VisitedCount returns the number of files that we've processed. This is
+// incremented before the file is processed.
 func (gc *GeographicCollector) VisitedCount() int {
 	return gc.visitedCount
+}
+
+// SetFileProcessedCallback sets a callback to be called for every file we
+// process.
+func (gc *GeographicCollector) SetFileProcessedCallback(cb FileProcessedFunc) {
+	gc.fileProcessedCb = cb
 }
 
 // VisitedFilepaths returns the list of file-paths that we encountered.
@@ -73,6 +85,7 @@ func (gc *GeographicCollector) AddFileProcessor(extension string, processor File
 	return nil
 }
 
+// ReadFromFilepath is called for each visited file.
 func (gc *GeographicCollector) ReadFromFilepath(filepath string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
@@ -97,9 +110,15 @@ func (gc *GeographicCollector) ReadFromFilepath(filepath string) (err error) {
 	err = fp.Process(gc.ti, gc.gi, filepath)
 	log.PanicIf(err)
 
+	if gc.fileProcessedCb != nil {
+		err := gc.fileProcessedCb(filepath)
+		log.PanicIf(err)
+	}
+
 	return nil
 }
 
+// ReadFromPath is called for each path we visit.
 func (gc *GeographicCollector) ReadFromPath(rootPath string) (err error) {
 	defer func() {
 		if state := recover(); state != nil {
